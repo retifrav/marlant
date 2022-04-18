@@ -1,0 +1,12 @@
+[
+    {
+        "caption": "-"
+    },
+    {
+        "caption": "MarLant: Create a translation file",
+        "command": "marlant_create_translation_file"
+    },
+    {
+        "caption": "-"
+    }
+]
