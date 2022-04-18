@@ -1,0 +1,89 @@
+%YAML 1.2
+---
+version: 2
+name: SubRip / SRT
+file_extensions:
+  - srt
+scope: text.srt
+
+contexts:
+  main:
+    - match: ^(\d+)$
+      comment: Subtitle ordinal number
+      scope: variable.function markup.bold
+
+    - match: ^(\d{2}:\d{2}:\d{2},\d{3}) (-->) (\d{2}:\d{2}:\d{2},\d{3})$
+      comment: Subtitle timecode
+      captures:
+        1: variable.function markup.italic
+        2: variable.function
+        3: variable.function markup.italic
+
+    # - match: ^\s.*$
+    #   comment: Error - line starts with a whitespace character
+    #   scope: markup.deleted.srt
+
+    # tags brackets only
+    # - match: "<"
+    #   scope: punctuation.definition.tag.begin
+    # - match: ">"
+    #   scope: punctuation.definition.tag.end
+
+    # simple highlighting tags
+    # - match: (</?)((?i:b|i|u)\b)
+    #   captures:
+    #     1: punctuation.definition.tag.begin.html
+    #     2: entity.name.tag.inline.any.html
+    #   push:
+    #     - match: "((?: ?/)?>)"
+    #       captures:
+    #         1: punctuation.definition.tag.end.html
+    #       pop: true
+
+    # advanced highlighting tags
+    - match: \<b\>
+      comment: <b>bold</b>
+      scope: comment.srt
+      push:
+        - match: \<\/b\>
+          scope: comment.srt
+          pop: true
+        - include: main
+        - match: .
+          scope: markup.bold.srt
+    - match: \<i\>
+      comment: <i>italic</i>
+      scope: comment.srt
+      push:
+        - match: \<\/i\>
+          scope: comment.srt
+          pop: true
+        - include: main
+        - match: .
+          scope: markup.italic.srt
+    - match: \<(u)\>
+      comment: <u>underline</u>
+      scope: comment.srt
+      push:
+        - match: \<\/u\>
+          scope: comment.srt
+          pop: true
+        - include: main
+        - match: .
+          scope: markup.underline.srt
+    # - match: \{\\an[1-9]{1}\}
+    #   comment: Position tags
+    #   scope: entity.name.function.srt
+    - match: (\<font color="(#?\w+)"\>)
+      # TODO: perhaps, capture colors and apply them to tag contents
+      comment: <font>colored text</font>
+      captures:
+        1: comment.srt
+        2: markup.bold.srt
+      push:
+        - match: \<\/font\>
+          scope: comment.srt
+          pop: true
+        - include: main
+        - match: .
+          scope: markup.other.srt

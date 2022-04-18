@@ -8,6 +8,7 @@ wrongFormatError: str = " ".join((
     "The original SRT file seems to have",
     "a wrong format, because"
 ))
+# might want to expose this as argument/setting
 ofEncoding: str = "utf-8"
 
 regexSrtNumber = re.compile(r"^[1-9]{1}\d*$")
@@ -117,7 +118,6 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                 crntTitleCnt: int = 0
                 for index, line in enumerate(of):
                     line = line.strip()
-                    print(line)
 
                     if not line:
                         if hadEmptyLine or index == 0:
@@ -216,4 +216,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         return self.window.active_view().match_selector(0, "text.srt")
 
 
-# TODO : Recalculate translation progress on save
+class FileEventListener(sublime_plugin.ViewEventListener):
+    def on_post_save(self):
+        if self.view.match_selector(0, "text.srt"):
+            print("File was saved")
