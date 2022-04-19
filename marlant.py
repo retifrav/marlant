@@ -4,6 +4,10 @@ import sublime_plugin
 import pathlib
 import re
 
+# TODO: renumbering subtitles ordinals
+# TODO: splitting subtitle in two
+# TODO: joining two subtitles into one
+
 wrongFormatError: str = " ".join((
     "The original SRT file seems to have",
     "a wrong format, because"
@@ -12,7 +16,9 @@ wrongFormatError: str = " ".join((
 ofEncoding: str = "utf-8"
 
 regexSrtNumber = re.compile(r"^[1-9]{1}\d*$")
-regexSrtTimeCode = re.compile(r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$")
+regexSrtTimeCode = re.compile(
+    r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
+)
 
 
 def plugin_loaded():
@@ -105,6 +111,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                 return
 
         try:
+            # TODO: read lines from current buffer, not from file on disk
             with open(originalFile,
                       "r",
                       encoding=ofEncoding
@@ -218,5 +225,6 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
 
 class FileEventListener(sublime_plugin.ViewEventListener):
     def on_post_save(self):
+        # TODO: show translation progress (if in translation mode)
         if self.view.match_selector(0, "text.srt"):
             print("File was saved")
