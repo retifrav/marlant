@@ -40,6 +40,14 @@ def plugin_unloaded():
 #     return False
 
 
+def openTranslationFile(window, selectedFile):
+    if selectedFile:
+        window.open_file(
+            selectedFile,
+            sublime.ADD_TO_SELECTION
+        )
+
+
 class LanguageInputHandler(sublime_plugin.TextInputHandler):
     def name(self):
         return "language"
@@ -207,6 +215,8 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
             )
             return
 
+        openTranslationFile(self.window, str(generatedFile))
+
     def input(self, args):
         if "language" not in args:
             return LanguageInputHandler()
@@ -220,6 +230,24 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self):
         # return isItAnSRTfile(self.window.active_view().file_name())
+        return self.window.active_view().match_selector(0, "text.srt")
+
+
+class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        originalFile = pathlib.Path(self.window.active_view().file_name())
+        sublime.open_dialog(
+            lambda f: openTranslationFile(self.window, f),
+            [("SubRip / SRT subtitles", ["srt"])],
+            str(originalFile.parents[0]),
+            False,
+            False
+        )
+
+    def is_enabled(self):
+        return self.window.active_view().match_selector(0, "text.srt")
+
+    def is_visible(self):
         return self.window.active_view().match_selector(0, "text.srt")
 
 
