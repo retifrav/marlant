@@ -42,12 +42,46 @@ def plugin_unloaded():
 #     return False
 
 
-def openTranslationFile(window, selectedFile):
+def openTranslationFile(
+        window: sublime.Window,
+        originalFile: pathlib.Path,
+        selectedFile: str
+        ) -> None:
     if selectedFile:
-        window.open_file(
-            selectedFile,
-            sublime.ADD_TO_SELECTION
-        )
+        if pathlib.Path(selectedFile) == originalFile:
+            sublime.error_message(
+                " ".join((
+                    "You selected the same file",
+                    "as the one already opened."
+                ))
+            )
+            return
+
+        # TODO: Check if that file is already opened in other tab/selection
+        # print(window.find_open_file(selectedFile))
+        # for f in window.views():
+        #     print(f.file_name())
+        # views = window.views()
+        # for v in views:
+        #     if v and v.file_name():
+        #         print(v.file_name())
+
+        # TODO: If there is already a selection, unselect everything
+
+        try:
+            window.open_file(
+                selectedFile,
+                sublime.ADD_TO_SELECTION
+            )
+        except Exception as ex:
+            print(f"error: {ex}")
+            sublime.error_message(
+                " ".join((
+                    "There was an error trying to open translation file.",
+                    "Check console for details."
+                ))
+            )
+            return
 
 
 class LanguageInputHandler(sublime_plugin.TextInputHandler):
@@ -217,7 +251,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
             )
             return
 
-        openTranslationFile(self.window, str(generatedFile))
+        openTranslationFile(self.window, originalFile, str(generatedFile))
 
     def input(self, args):
         if "language" not in args:
@@ -241,7 +275,7 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
             self.window.active_view().file_name()
         )
         sublime.open_dialog(
-            lambda f: openTranslationFile(self.window, f),
+            lambda f: openTranslationFile(self.window, originalFile, f),
             [("SubRip / SRT subtitles", ["srt"])],
             str(originalFile.parents[0]),
             False,
