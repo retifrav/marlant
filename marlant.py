@@ -4,6 +4,8 @@ import sublime_plugin
 import pathlib
 import re
 
+import typing
+
 # TODO: renumbering subtitles ordinals
 # TODO: splitting subtitle in two
 # TODO: joining two subtitles into one
@@ -15,8 +17,8 @@ wrongFormatError: str = " ".join((
 # might want to expose this as argument/setting
 ofEncoding: str = "utf-8"
 
-regexSrtNumber = re.compile(r"^[1-9]{1}\d*$")
-regexSrtTimeCode = re.compile(
+regexSrtNumber: typing.Pattern = re.compile(r"^[1-9]{1}\d*$")
+regexSrtTimeCode: typing.Pattern = re.compile(
     r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
 )
 
@@ -49,19 +51,19 @@ def openTranslationFile(window, selectedFile):
 
 
 class LanguageInputHandler(sublime_plugin.TextInputHandler):
-    def name(self):
+    def name(self) -> str:
         return "language"
 
-    def placeholder(self):
+    def placeholder(self) -> str:
         return "lang"
 
-    def initial_text(self):
+    def initial_text(self) -> str:
         return "ru"
 
-    def validate(self, text):
+    def validate(self, text: str) -> bool:
         return True if text.strip() else False
 
-    def preview(self, text):
+    def preview(self, text: str) -> str:
         if text.strip():
             return f"some-file-{text}.srt"
         else:
@@ -86,14 +88,14 @@ class LanguageInputHandler(sublime_plugin.TextInputHandler):
 
 
 class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
-    def run(self, language):
-        originalFileValue = self.window.active_view().file_name()
+    def run(self, language: str) -> None:
+        originalFileValue: str = self.window.active_view().file_name()
         # these checks are likely redundant, because command is enabled
         # only for .srt files
         # if not originalFileValue:
         #     sublime.error_message(f"This is not a existing file")
         #     return
-        originalFile = pathlib.Path(originalFileValue)
+        originalFile: pathlib.Path = pathlib.Path(originalFileValue)
         # if originalFile.suffix != ".srt":
         #     sublime.error_message("This is not an .srt file")
         #     return
@@ -102,13 +104,13 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         # because TextInputHandler.validate() takes care of this
         language = language.strip()
 
-        generatedFile = pathlib.Path(
+        generatedFile: pathlib.Path = pathlib.Path(
             originalFile.parents[0],
             f"{originalFile.stem}-{language}{originalFile.suffix}"
         )
 
         if generatedFile.is_file():
-            userAnswer = sublime.ok_cancel_dialog(
+            userAnswer: bool = sublime.ok_cancel_dialog(
                 " ".join((
                     f"The file {generatedFile} already exists.",
                     "Do you want to overwrite it?"
@@ -221,21 +223,23 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         if "language" not in args:
             return LanguageInputHandler()
 
-    def input_description(self):
+    def input_description(self) -> str:
         return "Language suffix"
 
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         # return isItAnSRTfile(self.window.active_view().file_name())
         return self.window.active_view().match_selector(0, "text.srt")
 
-    def is_visible(self):
+    def is_visible(self) -> bool:
         # return isItAnSRTfile(self.window.active_view().file_name())
         return self.window.active_view().match_selector(0, "text.srt")
 
 
 class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
     def run(self):
-        originalFile = pathlib.Path(self.window.active_view().file_name())
+        originalFile: pathlib.Path = pathlib.Path(
+            self.window.active_view().file_name()
+        )
         sublime.open_dialog(
             lambda f: openTranslationFile(self.window, f),
             [("SubRip / SRT subtitles", ["srt"])],
@@ -244,10 +248,10 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
             False
         )
 
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         return self.window.active_view().match_selector(0, "text.srt")
 
-    def is_visible(self):
+    def is_visible(self) -> bool:
         return self.window.active_view().match_selector(0, "text.srt")
 
 
