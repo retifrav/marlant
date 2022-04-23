@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 
+# import functools
 import pathlib
 import re
 
@@ -45,6 +46,7 @@ def plugin_unloaded():
 def openTranslationFile(
         window: sublime.Window,
         originalFile: pathlib.Path,
+        # openFiles: typing.List[str],
         selectedFile: str
         ) -> None:
     if selectedFile:
@@ -57,31 +59,62 @@ def openTranslationFile(
             )
             return
 
-        # TODO: Check if that file is already opened in other tab/selection
-        # print(window.find_open_file(selectedFile))
-        # for f in window.views():
-        #     print(f.file_name())
-        # views = window.views()
-        # for v in views:
-        #     if v and v.file_name():
-        #         print(v.file_name())
+        # no need, find_open_file() will take care of this
+        # if selectedFile in openFiles:
+        #     sublime.error_message(
+        #         " ".join((
+        #             "This file is already",
+        #             "opened."
+        #         ))
+        #     )
+        #     return
 
-        # TODO: If there is already a selection, unselect everything
+        crntFileSheet = window.active_sheet()
+        crntFileView = window.active_view()
+        # print(f"Current sheet: {window.active_sheet()}")
+        # print(f"Selected sheets: {window.selected_sheets()}")
 
-        try:
-            window.open_file(
-                selectedFile,
-                sublime.ADD_TO_SELECTION
-            )
-        except Exception as ex:
-            print(f"error: {ex}")
-            sublime.error_message(
-                " ".join((
-                    "There was an error trying to open translation file.",
-                    "Check console for details."
-                ))
-            )
-            return
+        selectedFileSheet = None
+        selectedFileView = window.find_open_file(selectedFile)
+        if not selectedFileView:  # if this file isn't already open
+            try:
+                window.open_file(
+                    selectedFile
+                    # no need, there will be select_sheets() anyway
+                    # sublime.ADD_TO_SELECTION
+                )
+                selectedFileView = window.find_open_file(selectedFile)
+            except Exception as ex:
+                print(f"error: {ex}")
+                sublime.error_message(
+                    " ".join((
+                        "There was an error trying to open translation file.",
+                        "Check console for details."
+                    ))
+                )
+                return
+        selectedFileSheet = selectedFileView.sheet()
+        # sometimes there could be a transient view between them,
+        # sometimes - a sheet, so it's not trivial to have them
+        # next to each other (is it view or sheet index you need to use),
+        # and so it's easier to just move them both to the end of tabs row
+        crntFileSheetGroup, crntFileSheetIndex = window.get_sheet_index(
+            crntFileSheet
+        )
+        window.set_sheet_index(
+            crntFileSheet,
+            crntFileSheetGroup,
+            -1
+        )
+        # crntFileSheetGroup, crntFileSheetIndex = window.get_view_index(
+        #     crntFileSheet
+        # )
+        window.set_sheet_index(
+            selectedFileSheet,
+            crntFileSheetGroup,
+            -1  # crntFileSheetIndex + 1
+        )
+        window.select_sheets([crntFileSheet, selectedFileSheet])
 
 
 class LanguageInputHandler(sublime_plugin.TextInputHandler):
@@ -251,7 +284,12 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
             )
             return
 
-        openTranslationFile(self.window, originalFile, str(generatedFile))
+        openTranslationFile(
+            self.window,
+            originalFile,
+            # [],
+            str(generatedFile)
+        )
 
     def input(self, args):
         if "language" not in args:
@@ -274,8 +312,19 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
         originalFile: pathlib.Path = pathlib.Path(
             self.window.active_view().file_name()
         )
+        # openFiles = []
+        # for v in self.window.views():
+        #     openFiles.append(v.file_name())
+
         sublime.open_dialog(
-            lambda f: openTranslationFile(self.window, originalFile, f),
+            lambda f: sublime.set_timeout(
+                lambda: openTranslationFile(
+                    self.window,
+                    originalFile,
+                    # openFiles,
+                    f
+                )
+            ),
             [("SubRip / SRT subtitles", ["srt"])],
             str(originalFile.parents[0]),
             False,
