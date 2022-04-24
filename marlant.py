@@ -156,15 +156,15 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
     def run(self, language: str) -> None:
         activeView = self.window.active_view()
         originalFileValue: str = activeView.file_name()
-        # these checks are likely redundant, because command is enabled
-        # only for .srt files
-        # if not originalFileValue:
-        #     sublime.error_message(f"This is not a existing file")
-        #     return
+        if not originalFileValue:
+            sublime.error_message(
+                "You can run this command only from an existing file"
+            )
+            return
         originalFile: pathlib.Path = pathlib.Path(originalFileValue)
-        # if originalFile.suffix != ".srt":
-        #     sublime.error_message("This is not an .srt file")
-        #     return
+        if originalFile.suffix != ".srt":
+            sublime.error_message("This is not an .srt file")
+            return
 
         # there should be no need to check for empty string,
         # because TextInputHandler.validate() takes care of this
@@ -307,9 +307,17 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
 
 class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
     def run(self):
-        originalFile: pathlib.Path = pathlib.Path(
-            self.window.active_view().file_name()
-        )
+        originalFileValue: str = self.window.active_view().file_name()
+        if not originalFileValue:
+            sublime.error_message(
+                "You can run this command only from an existing file"
+            )
+            return
+        originalFile: pathlib.Path = pathlib.Path(originalFileValue)
+        if originalFile.suffix != ".srt":
+            sublime.error_message("This is not an .srt file")
+            return
+
         # openFiles = []
         # for v in self.window.views():
         #     openFiles.append(v.file_name())

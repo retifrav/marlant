@@ -7,6 +7,10 @@
         "command": "marlant_create_translation_file"
     },
     {
+        "caption": "MarLant: Open a translation file",
+        "command": "marlant_open_translation_file"
+    },
+    {
         "caption": "-"
     }
 ]
