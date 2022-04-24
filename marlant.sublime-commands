@@ -6,5 +6,9 @@
     {
         "caption": "MarLant: Open a translation file",
         "command": "marlant_open_translation_file"
+    },
+    {
+        "caption": "MarLant: Renumber titles",
+        "command": "marlant_renumber_titles"
     }
 ]

@@ -12,7 +12,7 @@ import typing
 # TODO: joining two subtitles into one
 
 wrongFormatError: str = " ".join((
-    "The original SRT file seems to have",
+    "The SRT content seems to have",
     "a wrong format, because"
 ))
 
@@ -342,6 +342,61 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self) -> bool:
         return self.window.active_view().match_selector(0, "text.srt")
+
+
+class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        bufferLinesRegions = self.view.split_by_newlines(
+            sublime.Region(0, self.view.size())
+        )
+        hadEmptyLine: bool = False
+        crntTitleStrNumber: int = 0
+        crntTitleCnt: int = 1
+        replacementBufferAdjustment: int = 0
+        for index, region in enumerate(bufferLinesRegions):
+            region = sublime.Region(
+                region.a - replacementBufferAdjustment,
+                region.b - replacementBufferAdjustment
+            )
+            line = self.view.substr(region).strip()
+            if not line:
+                if hadEmptyLine or index == 0:
+                    sublime.error_message(
+                        " ".join((
+                            f"{wrongFormatError} the line {index+1}",
+                            "should not be empty"
+                        ))
+                    )
+                    return
+                else:
+                    crntTitleStrNumber = 0
+                    hadEmptyLine = True
+                    continue
+
+            hadEmptyLine = False
+            crntTitleStrNumber += 1
+
+            if crntTitleStrNumber == 1:
+                if regexSrtNumber.fullmatch(line) is not None:
+                    crntTitleCntStr: str = str(crntTitleCnt)
+                    self.view.replace(edit, region, crntTitleCntStr)
+                    crntTitleCnt += 1
+                    replacementBufferAdjustment += len(line) - len(crntTitleCntStr)
+                    continue
+                else:
+                    sublime.error_message(
+                        " ".join((
+                            f"{wrongFormatError} the line {index+1}",
+                            "should contain a non-zero title number"
+                        ))
+                    )
+                    return
+
+    def is_enabled(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+    def is_visible(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
 
 
 class FileEventListener(sublime_plugin.ViewEventListener):
