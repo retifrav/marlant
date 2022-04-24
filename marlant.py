@@ -7,9 +7,6 @@ import re
 
 import typing
 
-# TODO: renumbering subtitles ordinals
-# TODO: splitting subtitle in two
-# TODO: joining two subtitles into one
 
 wrongFormatError: str = " ".join((
     "The SRT content seems to have",
@@ -32,6 +29,16 @@ def plugin_unloaded():
     pass
 
 
+def scrollToProblematicLine(
+    view: sublime.View,
+    region: sublime.Region
+) -> None:
+    lineSelection = view.sel()
+    lineSelection.clear()
+    lineSelection.add(region)
+    view.show(region)
+
+
 # might be an overkill, it is enough to just check for text.srt selector/scope
 # def isItAnSRTfile(fileFromView: str) -> bool:
 #     if fileFromView is not None:
@@ -42,11 +49,11 @@ def plugin_unloaded():
 
 
 def openTranslationFile(
-        window: sublime.Window,
-        originalFile: pathlib.Path,
-        # openFiles: typing.List[str],
-        selectedFile: str
-        ) -> None:
+    window: sublime.Window,
+    originalFile: pathlib.Path,
+    # openFiles: typing.List[str],
+    selectedFile: str
+) -> None:
     if selectedFile:
         if pathlib.Path(selectedFile) == originalFile:
             sublime.error_message(
@@ -198,6 +205,8 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                 bufferLinesRegions = activeView.split_by_newlines(
                     sublime.Region(0, activeView.size())
                 )
+                # TODO: perhaps also scroll to the problematic line on error,
+                # like on re-numbering titles ordinals
                 for index, region in enumerate(bufferLinesRegions):
                     line = activeView.substr(region).strip()
 
@@ -263,15 +272,15 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                     # replace actual titles with empty lines
                     gf.write("\n")
 
-        except UnicodeDecodeError as ex:
-            sublime.error_message(
-                " ".join((
-                    "It looks like the original SRT file is not",
-                    "in UTF-8 encoding. Try to re-open it",
-                    "with the right encoding and then save it with UTF-8"
-                ))
-            )
-            return
+        # except UnicodeDecodeError as ex:
+        #     sublime.error_message(
+        #         " ".join((
+        #             "It looks like the original SRT file is not",
+        #             "in UTF-8 encoding. Try to re-open it",
+        #             "with the right encoding and then save it with UTF-8"
+        #         ))
+        #     )
+        #     return
         except Exception as ex:
             print(f"error: {ex}")
             sublime.error_message(
@@ -367,6 +376,7 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                             "should not be empty"
                         ))
                     )
+                    scrollToProblematicLine(self.view, region)
                     return
                 else:
                     crntTitleStrNumber = 0
@@ -390,6 +400,7 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                             "should contain a non-zero title number"
                         ))
                     )
+                    scrollToProblematicLine(self.view, region)
                     return
 
     def is_enabled(self) -> bool:
