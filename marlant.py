@@ -15,8 +15,6 @@ wrongFormatError: str = " ".join((
     "The original SRT file seems to have",
     "a wrong format, because"
 ))
-# might want to expose this as argument/setting
-ofEncoding: str = "utf-8"
 
 regexSrtNumber: typing.Pattern = re.compile(r"^[1-9]{1}\d*$")
 regexSrtTimeCode: typing.Pattern = re.compile(
@@ -156,7 +154,8 @@ class LanguageInputHandler(sublime_plugin.TextInputHandler):
 
 class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
     def run(self, language: str) -> None:
-        originalFileValue: str = self.window.active_view().file_name()
+        activeView = self.window.active_view()
+        originalFileValue: str = activeView.file_name()
         # these checks are likely redundant, because command is enabled
         # only for .srt files
         # if not originalFileValue:
@@ -188,20 +187,19 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                 return
 
         try:
-            # TODO: read lines from current buffer, not from file on disk
-            with open(originalFile,
-                      "r",
-                      encoding=ofEncoding
-                      ) as of, \
-                open(generatedFile,
-                     "w",
-                     encoding="utf-8"
-                     ) as gf:
+            with open(
+                generatedFile,
+                "w",
+                encoding="utf-8"
+            ) as gf:
                 hadEmptyLine: bool = False
                 crntTitleStrNumber: int = 0
                 crntTitleCnt: int = 0
-                for index, line in enumerate(of):
-                    line = line.strip()
+                bufferLinesRegions = activeView.split_by_newlines(
+                    sublime.Region(0, activeView.size())
+                )
+                for index, region in enumerate(bufferLinesRegions):
+                    line = activeView.substr(region).strip()
 
                     if not line:
                         if hadEmptyLine or index == 0:
