@@ -9,7 +9,7 @@ import typing
 
 
 wrongFormatError: str = " ".join((
-    "The SRT content seems to have",
+    "The SubRip content seems to have",
     "a wrong format, because"
 ))
 
@@ -38,6 +38,14 @@ def scrollToProblematicLine(
     lineSelection.add(region)
     view.show(region)
 
+
+def scrollToProblematicLineNumber(
+    view: sublime.View,
+    lineNumber: int
+) -> None:
+    pnt: int = view.text_point(lineNumber, 0)
+    lineRegion: sublime.Region = view.line(pnt)
+    scrollToProblematicLine(view, lineRegion)
 
 # might be an overkill, it is enough to just check for text.srt selector/scope
 # def isItAnSRTfile(fileFromView: str) -> bool:
@@ -218,6 +226,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                                     "should not be empty"
                                 ))
                             )
+                            scrollToProblematicLineNumber(activeView, index)
                             return
                         else:
                             crntTitleStrNumber = 0
@@ -241,6 +250,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                                         f"title number ({crntTitleCnt})"
                                     ))
                                 )
+                                scrollToProblematicLineNumber(activeView, index)
                                 return
                             else:
                                 crntTitleCnt = crntTitleCntCandidate
@@ -253,6 +263,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                                     "should contain a title number"
                                 ))
                             )
+                            scrollToProblematicLineNumber(activeView, index)
                             return
 
                     if crntTitleStrNumber == 2:
@@ -263,10 +274,11 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                             sublime.error_message(
                                 " ".join((
                                     f"{wrongFormatError} there",
-                                    "should have been a time code",
+                                    "should be a time code",
                                     f"on the line {index+1}"
                                 ))
                             )
+                            scrollToProblematicLineNumber(activeView, index)
                             return
 
                     # replace actual titles with empty lines
