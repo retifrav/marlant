@@ -5,8 +5,10 @@ Sublime Text plugin for translating [SubRip/SRT](https://en.wikipedia.org/wiki/S
 ## Features
 
 - renumbering titles ordinals
-- generation and opening of a translation file
+- inserting new titles
+- empty translation file generation
 
 ## Credits
 
 - SubRip / SRT syntax definition is based on [this implementation](https://github.com/SalGnt/Sublime-SRT/blob/master/SRT.tmLanguage), converted to `.sublime-syntax` format with [SublimeSyntaxConvertor tool](https://github.com/aziz/SublimeSyntaxConvertor)
+- timecode parsing and composing is based on the code from [srt-shift](https://github.com/adeel/srt-shift)

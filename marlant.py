@@ -12,10 +12,18 @@ wrongFormatError: str = " ".join((
     "The SubRip content seems to have",
     "a wrong format, because"
 ))
+wrongTitleFormatError = " ".join((
+    "Current title seems to have",
+    "incorrect format, because"
+))
 
 regexSrtNumber: typing.Pattern = re.compile(r"^[1-9]{1}\d*$")
+regexSrtTiming: typing.Pattern = re.compile(
+    # r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
+    r"^(\d{2}:\d{2}:\d{2},\d{3}) (-->) (\d{2}:\d{2}:\d{2},\d{3})$"
+)
 regexSrtTimeCode: typing.Pattern = re.compile(
-    r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
+    r"^\d{2}:\d{2}:\d{2},\d{3}$"
 )
 
 
@@ -54,6 +62,68 @@ def scrollToProblematicLineNumber(
 #         if currentFilePath.suffix.lower() == ".srt":
 #             return True
 #     return False
+
+
+def parseTitleString(
+    view: sublime.View,
+    titleRegions: typing.List[sublime.Region]
+) -> typing.Tuple[int, str]:
+    # for index, region in enumerate(titleRegions):
+    #     line = view.substr(region).strip()
+    #     print(line)
+    if len(titleRegions) < 3:
+        raise ValueError(
+            " ".join((
+                wrongTitleFormatError,
+                "it must have at least one line of text",
+                "in addition to the ordinal and timing."
+            ))
+        )
+    titleOrdinal = view.substr(titleRegions[0]).strip()
+    if regexSrtNumber.fullmatch(titleOrdinal) is None:
+        raise ValueError(
+            " ".join((
+                wrongTitleFormatError,
+                "the first line should be a title ordinal."
+            ))
+        )
+    titleTiming = view.substr(titleRegions[1]).strip()
+    if regexSrtTiming.fullmatch(titleTiming) is None:
+        raise ValueError(
+            " ".join((
+                wrongTitleFormatError,
+                "the second line should be a title timing."
+            ))
+        )
+    return int(titleOrdinal), titleTiming
+
+
+def timeCodeToMilliseconds(timeCode: str) -> int:
+    if regexSrtTimeCode.fullmatch(timeCode) is None:
+        raise ValueError("Timecode has a wrong format.")
+    tms = timeCode.split(":")
+    hour: int = int(tms[0])
+    minute: int = int(tms[1])
+    seconds: typing.List[str] = tms[2].split(",")
+    second: int = int(seconds[0])
+    millisecond: int = int(seconds[1])
+
+    return (
+        hour * 60 * 60 * 1000 +
+        minute * 60 * 1000 +
+        second * 1000 +
+        millisecond
+    )
+
+
+def millisecondsToTimeCode(milliseconds: int) -> str:
+    timeComponents: typing.Tuple[int, int, int, int] = (
+        milliseconds // (60 * 60 * 1000),
+        (milliseconds % (60 * 60 * 1000)) // (60 * 1000),
+        (milliseconds % (60 * 1000)) // 1000,
+        milliseconds % 1000
+    )
+    return "%02d:%02d:%02d,%03d" % timeComponents
 
 
 def openTranslationFile(
@@ -152,23 +222,8 @@ class LanguageInputHandler(sublime_plugin.TextInputHandler):
             )
 
 
-# ListInputHandler limits the choice, user can't enter custom values
-# class LanguageInputHandler(sublime_plugin.ListInputHandler):
-#     def placeholder(self):
-#         return "language suffix"
-
-#     def initial_text(self):
-#         return "lang"
-
-#     def list_items(self):
-#         return [
-#             ("en", 0),
-#             ("ru", 1)
-#         ]
-
-
 class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
-    def run(self, language: str) -> None:
+    def run(self, language: str):
         activeView = self.window.active_view()
         originalFileValue: str = activeView.file_name()
         if not originalFileValue:
@@ -210,8 +265,10 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                 hadEmptyLine: bool = False
                 crntTitleStrNumber: int = 0
                 crntTitleCnt: int = 0
-                bufferLinesRegions = activeView.split_by_newlines(
-                    sublime.Region(0, activeView.size())
+                bufferLinesRegions: typing.List[sublime.Region] = (
+                    activeView.split_by_newlines(
+                        sublime.Region(0, activeView.size())
+                    )
                 )
                 # TODO: perhaps also scroll to the problematic line on error,
                 # like on re-numbering titles ordinals
@@ -267,7 +324,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                             return
 
                     if crntTitleStrNumber == 2:
-                        if regexSrtTimeCode.fullmatch(line) is not None:
+                        if regexSrtTiming.fullmatch(line) is not None:
                             gf.write(f"{line}\n")
                             continue
                         else:
@@ -367,8 +424,10 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
 
 class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        bufferLinesRegions = self.view.split_by_newlines(
-            sublime.Region(0, self.view.size())
+        bufferLinesRegions: typing.List[sublime.Region] = (
+            self.view.split_by_newlines(
+                sublime.Region(0, self.view.size())
+            )
         )
         hadEmptyLine: bool = False
         crntTitleStrNumber: int = 0
@@ -422,8 +481,168 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
         return self.view.window().active_view().match_selector(0, "text.srt")
 
 
+class AfterCurrentTitleInputHandler(sublime_plugin.ListInputHandler):
+    def placeholder(self):
+        return "direction"
+
+    def initial_text(self):
+        return "after"
+
+    def list_items(self):
+        return [
+            ("after", True),
+            ("before", False)
+        ]
+
+
+class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
+    def run(self, edit, after_current_title: bool):
+        currentSelection = self.view.sel()
+        currentTitlePoint: sublime.Selection = currentSelection[0].b
+
+        if len(
+            self.view.substr(
+                self.view.line(currentTitlePoint)
+            ).strip()
+        ) == 0:
+            sublime.error_message(
+                " ".join((
+                    "The cursor is on an empty line,",
+                    "can't guess the current title"
+                ))
+            )
+            return
+
+        emptyLineBefore: int = self.view.find_by_class(
+            currentTitlePoint,
+            False,
+            sublime.CLASS_EMPTY_LINE
+        )
+        emptyLineAfter: int = self.view.find_by_class(
+            currentTitlePoint,
+            True,
+            sublime.CLASS_EMPTY_LINE
+        )
+
+        currentTitleRegion: sublime.Region = sublime.Region(
+            emptyLineBefore if emptyLineBefore == 0 else emptyLineBefore + 1,
+            emptyLineAfter - 1
+        )
+        # currentSelection.clear()
+        # currentSelection.add(currentTitleRegion)
+
+        titleOrdinal: int = 0
+        titleTiming: str = ""
+        try:
+            titleOrdinal, titleTiming = parseTitleString(
+                self.view,
+                self.view.split_by_newlines(currentTitleRegion)
+            )
+            # print(f"Title ordinal: {titleOrdinal}, timing: {titleTiming}")
+        except ValueError as ex:
+            sublime.error_message(str(ex))
+            return
+
+        newTitleOrdinal: int = (
+            titleOrdinal + 1 if after_current_title
+            else titleOrdinal - 1
+        )
+        if newTitleOrdinal == 0:
+            newTitleOrdinal = 1
+
+        newTitleTiming: str = "00:00:00,000 --> 00:00:00,000"
+        timingMatches = regexSrtTiming.match(titleTiming)
+        if timingMatches is None:
+            sublime.error_message("The title timing has a wrong format.")
+            return
+        # print(timingMatches.group(0)) # full timing
+        # print(timingMatches.group(1)) # start time
+        # print(timingMatches.group(2)) # separator
+        # print(timingMatches.group(3)) # end time
+        timeCodeMS: int = 0
+        newTimeCodeMS_start: int = 0
+        newTimeCodeMS_end: int = 0
+        try:
+            timeCodeMS = timeCodeToMilliseconds(
+                timingMatches.group(3) if after_current_title
+                else timingMatches.group(1)
+            )
+        except ValueError as ex:
+            sublime.error_message(str(ex))
+            return
+
+        if after_current_title:
+            newTimeCodeMS_start = timeCodeMS + 1
+            newTimeCodeMS_end = timeCodeMS + 1001
+        else:
+            if timeCodeMS - 1001 < 0:
+                newTimeCodeMS_start = 0
+                newTimeCodeMS_end = 1000
+            else:
+                newTimeCodeMS_start = timeCodeMS - 1001
+                newTimeCodeMS_end = timeCodeMS - 1
+        newTitleTiming = " ".join((
+            f"{millisecondsToTimeCode(newTimeCodeMS_start)}",
+            "-->",
+            f"{millisecondsToTimeCode(newTimeCodeMS_end)}"
+        ))
+
+        lineNewTitleNumber: str = "\n"
+        lineNewTitleLast: str = ""
+        if not after_current_title:
+            lineNewTitleNumber = "\n" if emptyLineBefore != 0 else ""
+            lineNewTitleLast = "\n" if emptyLineBefore == 0 else ""
+
+        newTitle: str = "".join((
+            lineNewTitleNumber,
+            f"{newTitleOrdinal}\n",
+            f"{newTitleTiming}\n",
+            "[ ... ]\n",
+            lineNewTitleLast
+        ))
+        insertedCharsCount: int = self.view.insert(
+            edit,
+            emptyLineAfter if after_current_title else emptyLineBefore,
+            newTitle
+        )
+
+        currentSelection.clear()
+        currentSelection.add(
+            sublime.Region(
+                emptyLineAfter + 1 if after_current_title
+                else (
+                    emptyLineBefore + 1
+                    if emptyLineBefore != 0
+                    else emptyLineBefore
+                ),
+                emptyLineAfter + insertedCharsCount - 1
+                if after_current_title
+                else (
+                    emptyLineBefore + insertedCharsCount - 1
+                    if emptyLineBefore != 0
+                    else emptyLineBefore + insertedCharsCount - 2
+                )
+            )
+        )
+
+        self.view.run_command("marlant_renumber_titles")
+
+    def input(self, args):
+        if "after_current_title" not in args:
+            return AfterCurrentTitleInputHandler()
+
+    def input_description(self) -> str:
+        return "Where"
+
+    def is_enabled(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+    def is_visible(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+
 class FileEventListener(sublime_plugin.ViewEventListener):
-    def on_post_save(self):
+    def on_post_save_async(self):
         # TODO: show translation progress (if in translation mode)
         if self.view.match_selector(0, "text.srt"):
             print("File was saved")

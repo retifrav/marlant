@@ -10,5 +10,9 @@
     {
         "caption": "MarLant: Renumber titles",
         "command": "marlant_renumber_titles"
+    },
+    {
+        "caption": "MarLant: Insert new title",
+        "command": "marlant_insert_new_title"
     }
 ]
