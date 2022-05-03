@@ -4,9 +4,12 @@ Sublime Text plugin for translating [SubRip/SRT](https://en.wikipedia.org/wiki/S
 
 ## Features
 
-- renumbering titles ordinals
-- inserting new titles
-- empty translation file generation
+- SubRip / SRT syntax highlighting
+- handy commands for working with subtitles:
+    + renumbering titles ordinals
+    + inserting new titles
+    + splitting titles in two
+    + empty translation file generation
 
 ## Credits
 

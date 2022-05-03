@@ -14,5 +14,9 @@
     {
         "caption": "MarLant: Insert new title",
         "command": "marlant_insert_new_title"
+    },
+    {
+        "caption": "MarLant: Split the title",
+        "command": "marlant_split_title"
     }
 ]
