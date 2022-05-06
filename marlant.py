@@ -129,10 +129,37 @@ def millisecondsToTimeCode(milliseconds: int) -> str:
 
 
 def splitStringInTwo(stringToSplit: str) -> typing.Tuple[str, str]:
-    firstHalf: str = stringToSplit[:len(stringToSplit)//2]
-    secondHalf: str = stringToSplit[len(stringToSplit)//2:]
-    return firstHalf, secondHalf
+    middlePoint: int = len(stringToSplit) // 2
+    while stringToSplit[middlePoint] != " " and middlePoint != len(stringToSplit) - 1:
+        middlePoint += 1
+    firstHalf: str = stringToSplit[:middlePoint]
+    secondHalf: str = stringToSplit[middlePoint:]
+    if len(secondHalf) == 1:
+        firstHalf = stringToSplit
+        secondHalf = ""
+    return (
+        firstHalf if firstHalf else titlePlaceholder,
+        secondHalf.strip() if secondHalf else titlePlaceholder
+    )
 
+
+def splitTimingInTwo(timingToSplit: str) -> typing.Tuple[str, str]:
+    timingMatches = regexSrtTiming.match(timingToSplit)
+    if timingMatches is None:
+        raise ValueError("The title timing has a wrong format.")
+    # print(timingMatches.group(0)) # full timing
+    # print(timingMatches.group(1)) # start time
+    # print(timingMatches.group(2)) # separator
+    # print(timingMatches.group(3)) # end time
+    timingStart: int = timeCodeToMilliseconds(timingMatches.group(1))
+    timingEnd: int = timeCodeToMilliseconds(timingMatches.group(3))
+    timingHalfLength: int = (timingEnd - timingStart) // 2
+    endTimeFirst: str = millisecondsToTimeCode(timingStart + timingHalfLength)
+    startTimeSecond: str = millisecondsToTimeCode(timingEnd - timingHalfLength + 1)
+    return (
+        f"{timingMatches.group(1)} {timingMatches.group(2)} {endTimeFirst}",
+        f"{startTimeSecond} {timingMatches.group(2)} {timingMatches.group(3)}"
+    )
 
 def openTranslationFile(
     window: sublime.Window,
@@ -691,13 +718,6 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
                 self.view,
                 self.view.split_by_newlines(currentTitleRegion)
             )
-            # print(
-            #     " ".join((
-            #         f"Title ordinal: {titleOrdinal},",
-            #         f"timing: {titleTiming},",
-            #         f"text: {titleTextRegions}"
-            #     ))
-            # )
         except ValueError as ex:
             sublime.error_message(str(ex))
             return
@@ -725,31 +745,30 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
                 "",
                 titleTextFirst
             )
-        print("---")
-        print(titleTextFirst if titleTextFirst else titlePlaceholder)
-        print(titleTextSecond if titleTextSecond else titlePlaceholder)
-        print("---")
 
-        # newTitleTiming: str = "00:00:00,000 --> 00:00:00,000"
-        # timingMatches = regexSrtTiming.match(titleTiming)
-        # if timingMatches is None:
-        #     sublime.error_message("The title timing has a wrong format.")
-        #     return
-        # # print(timingMatches.group(0)) # full timing
-        # # print(timingMatches.group(1)) # start time
-        # # print(timingMatches.group(2)) # separator
-        # # print(timingMatches.group(3)) # end time
-        # timeCodeMS: int = 0
-        # newTimeCodeMS_start: int = 0
-        # newTimeCodeMS_end: int = 0
-        # try:
-        #     timeCodeMS = timeCodeToMilliseconds(
-        #         timingMatches.group(3) if after_current_title
-        #         else timingMatches.group(1)
-        #     )
-        # except ValueError as ex:
-        #     sublime.error_message(str(ex))
-        #     return
+        titleTimingFirst: int = titleTiming
+        titleTimingSecond: str = titleTiming
+        try:
+            titleTimingFirst, titleTimingSecond = splitTimingInTwo(titleTiming)
+        except ValueError as ex:
+            sublime.error_message(str(ex))
+            return
+
+        self.view.replace(
+            edit,
+            currentTitleRegion,
+            "\n".join((
+                str(titleOrdinal),
+                titleTimingFirst,
+                titleTextFirst,
+                "",
+                str(titleOrdinal),
+                titleTimingSecond,
+                titleTextSecond
+            ))
+        )
+
+        self.view.run_command("marlant_renumber_titles")
 
     def is_enabled(self) -> bool:
         return self.view.window().active_view().match_selector(0, "text.srt")
