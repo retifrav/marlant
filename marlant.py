@@ -161,6 +161,35 @@ def splitTimingInTwo(timingToSplit: str) -> typing.Tuple[str, str]:
         f"{startTimeSecond} {timingMatches.group(2)} {timingMatches.group(3)}"
     )
 
+
+def joinTimings(timingStartStr: str, timingEndStr: str) -> str:
+    timingStartMatches = regexSrtTiming.match(timingStartStr)
+    timingEndMatches = regexSrtTiming.match(timingEndStr)
+    if timingStartMatches is None or timingEndMatches is None:
+        raise ValueError("One of the title timings has a wrong format.")
+    # print(timingStartMatches.group(0)) # full timing
+    # print(timingStartMatches.group(1)) # start time
+    # print(timingStartMatches.group(2)) # separator
+    # print(timingStartMatches.group(3)) # end time
+    timingStart: int = timeCodeToMilliseconds(timingStartMatches.group(1))
+    timingEnd: int = timeCodeToMilliseconds(timingEndMatches.group(3))
+    # if timingEnd < timingStart:
+    #     raise ValueError("Second timing cannot be earlier than the first one.")
+    return (
+        " ".join((
+            timingStartMatches.group(1),
+            timingStartMatches.group(2),
+            timingEndMatches.group(3)
+        )) if timingEnd > timingStart
+        else
+        " ".join((
+            timingEndMatches.group(1),
+            timingStartMatches.group(2),
+            timingStartMatches.group(3)
+        ))
+    )
+
+
 def openTranslationFile(
     window: sublime.Window,
     originalFile: pathlib.Path,
@@ -263,12 +292,12 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         originalFileValue: str = activeView.file_name()
         if not originalFileValue:
             sublime.error_message(
-                "You can run this command only from an existing file"
+                "You can run this command only from an existing file."
             )
             return
         originalFile: pathlib.Path = pathlib.Path(originalFileValue)
         if originalFile.suffix != ".srt":
-            sublime.error_message("This is not an .srt file")
+            sublime.error_message("This is not an .srt file.")
             return
 
         # there should be no need to check for empty string,
@@ -315,7 +344,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                             sublime.error_message(
                                 " ".join((
                                     f"{wrongFormatError} the line {index+1}",
-                                    "should not be empty"
+                                    "should not be empty."
                                 ))
                             )
                             scrollToProblematicLineNumber(activeView, index)
@@ -339,7 +368,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                                         f"on the line {index+1}",
                                         f"({crntTitleCntCandidate}) is not",
                                         "a +1 increment of the previous",
-                                        f"title number ({crntTitleCnt})"
+                                        f"title number ({crntTitleCnt})."
                                     ))
                                 )
                                 scrollToProblematicLineNumber(activeView, index)
@@ -352,7 +381,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                             sublime.error_message(
                                 " ".join((
                                     f"{wrongFormatError} the line {index+1}",
-                                    "should contain a title number"
+                                    "should contain a title number."
                                 ))
                             )
                             scrollToProblematicLineNumber(activeView, index)
@@ -367,7 +396,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                                 " ".join((
                                     f"{wrongFormatError} there",
                                     "should be a time code",
-                                    f"on the line {index+1}"
+                                    f"on the line {index+1}."
                                 ))
                             )
                             scrollToProblematicLineNumber(activeView, index)
@@ -381,7 +410,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         #         " ".join((
         #             "It looks like the original SRT file is not",
         #             "in UTF-8 encoding. Try to re-open it",
-        #             "with the right encoding and then save it with UTF-8"
+        #             "with the right encoding and then save it with UTF-8."
         #         ))
         #     )
         #     return
@@ -423,12 +452,12 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
         originalFileValue: str = self.window.active_view().file_name()
         if not originalFileValue:
             sublime.error_message(
-                "You can run this command only from an existing file"
+                "You can run this command only from an existing file."
             )
             return
         originalFile: pathlib.Path = pathlib.Path(originalFileValue)
         if originalFile.suffix != ".srt":
-            sublime.error_message("This is not an .srt file")
+            sublime.error_message("This is not an .srt file.")
             return
 
         # openFiles = []
@@ -479,7 +508,7 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                     sublime.error_message(
                         " ".join((
                             f"{wrongFormatError} the line {index+1}",
-                            "should not be empty"
+                            "should not be empty."
                         ))
                     )
                     scrollToProblematicLine(self.view, region)
@@ -503,7 +532,7 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                     sublime.error_message(
                         " ".join((
                             f"{wrongFormatError} the line {index+1}",
-                            "should contain a non-zero title number"
+                            "should contain a non-zero title number."
                         ))
                     )
                     scrollToProblematicLine(self.view, region)
@@ -543,7 +572,7 @@ class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
             sublime.error_message(
                 " ".join((
                     "The cursor is on an empty line,",
-                    "can't guess the current title"
+                    "can't guess the current title."
                 ))
             )
             return
@@ -689,7 +718,7 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
             sublime.error_message(
                 " ".join((
                     "The cursor is on an empty line,",
-                    "can't guess the current title"
+                    "can't guess the current title."
                 ))
             )
             return
@@ -746,7 +775,7 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
                 titleTextFirst
             )
 
-        titleTimingFirst: int = titleTiming
+        titleTimingFirst: str = titleTiming
         titleTimingSecond: str = titleTiming
         try:
             titleTimingFirst, titleTimingSecond = splitTimingInTwo(titleTiming)
@@ -769,6 +798,170 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
         )
 
         self.view.run_command("marlant_renumber_titles")
+
+    def is_enabled(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+    def is_visible(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+
+class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
+    def run(self, edit, after_current_title: bool):
+        currentSelection = self.view.sel()
+        currentTitlePoint: sublime.Selection = currentSelection[0].b
+
+        if len(
+            self.view.substr(
+                self.view.line(currentTitlePoint)
+            ).strip()
+        ) == 0:
+            sublime.error_message(
+                " ".join((
+                    "The cursor is on an empty line,",
+                    "can't guess the current title."
+                ))
+            )
+            return
+
+        emptyLineBefore: int = self.view.find_by_class(
+            currentTitlePoint,
+            False,
+            sublime.CLASS_EMPTY_LINE
+        )
+        emptyLineAfter: int = self.view.find_by_class(
+            currentTitlePoint,
+            True,
+            sublime.CLASS_EMPTY_LINE
+        )
+
+        if emptyLineBefore == 0 and after_current_title == False:
+            sublime.error_message(
+                " ".join((
+                    "This is the first title,",
+                    "there is nothing before it to join with."
+                ))
+            )
+            return
+
+        # there might be several empty lines in the end of the file,
+        # and as timing string is 30 symbols, there has to be at least
+        # that many symbols for a potential title to fit there
+        # ---
+        # it would be easier if self.view.size() was not counting
+        # trailing empty lines in the end of the file
+        if emptyLineAfter >= self.view.size() - 30 and after_current_title == True:
+            sublime.error_message(
+                " ".join((
+                    "This is the last title,",
+                    "there is nothing after it to join with."
+                ))
+            )
+            return
+
+        currentTitleRegion: sublime.Region = sublime.Region(
+            emptyLineBefore if emptyLineBefore == 0 else emptyLineBefore + 1,
+            emptyLineAfter - 1
+        )
+
+        firstTitleOrdinal: int = 0
+        firstTitleTiming: str = ""
+        firstTitleTextRegions: typing.List[sublime.Region] = []
+        try:
+            firstTitleOrdinal, firstTitleTiming, firstTitleTextRegions = parseTitleString(
+                self.view,
+                self.view.split_by_newlines(currentTitleRegion)
+            )
+        except ValueError as ex:
+            sublime.error_message(str(ex))
+            return
+
+        secondTitleEmptyLine: int = self.view.find_by_class(
+            currentTitleRegion.b + 1 if after_current_title else currentTitleRegion.a - 1,
+            after_current_title,
+            sublime.CLASS_EMPTY_LINE
+        )
+
+        secondTitleRegion: sublime.Region = sublime.Region(0,0)
+        if after_current_title:
+            secondTitleRegion = sublime.Region(
+                currentTitleRegion.b + 2,
+                secondTitleEmptyLine if secondTitleEmptyLine == self.view.size()
+                else secondTitleEmptyLine - 1
+            )
+        else:
+            secondTitleRegion = sublime.Region(
+                secondTitleEmptyLine + 1,
+                currentTitleRegion.a - 2
+            )
+
+        secondTitleOrdinal: int = 0
+        secondTitleTiming: str = ""
+        secondTitleTextRegions: typing.List[sublime.Region] = []
+        try:
+            secondTitleOrdinal, secondTitleTiming, secondTitleTextRegions = parseTitleString(
+                self.view,
+                self.view.split_by_newlines(
+                    sublime.Region(secondTitleRegion.a - 1, secondTitleRegion.b)
+                    if secondTitleEmptyLine == 0 else secondTitleRegion
+                )
+            )
+        except ValueError as ex:
+            sublime.error_message(str(ex))
+            return
+
+        joinedTitleRegions: typing.List[sublime.Region] = (
+            firstTitleTextRegions + secondTitleTextRegions if after_current_title
+            else secondTitleTextRegions + firstTitleTextRegions
+        )
+        joinedTitleTexts: typing.List[str] = []
+        for rgn in joinedTitleRegions:
+            joinedTitleTexts.append(self.view.substr(rgn).strip())
+        joinedTitleText: str = "\n".join(joinedTitleTexts)
+
+        joinedTitleTiming: str = (
+            firstTitleTiming if after_current_title
+            else secondTitleTiming
+        )
+        try:
+            joinedTitleTiming = joinTimings(firstTitleTiming, secondTitleTiming)
+        except ValueError as ex:
+            sublime.error_message(str(ex))
+            return
+
+        self.view.erase(
+            edit,
+            (
+                sublime.Region(secondTitleRegion.a, secondTitleRegion.b + 2)
+                if after_current_title
+                else sublime.Region(secondTitleRegion.a, secondTitleRegion.b)
+            )
+        )
+
+        self.view.replace(
+            edit,
+            (
+                currentTitleRegion if after_current_title
+                else sublime.Region(
+                    currentTitleRegion.a - secondTitleRegion.size() - 2,
+                    currentTitleRegion.b - secondTitleRegion.size()
+                )
+            ),
+            "\n".join((
+                str(firstTitleOrdinal),
+                joinedTitleTiming,
+                joinedTitleText
+            ))
+        )
+
+        self.view.run_command("marlant_renumber_titles")
+
+    def input(self, args):
+        if "after_current_title" not in args:
+            return AfterCurrentTitleInputHandler()
+
+    def input_description(self) -> str:
+        return "With the one"
 
     def is_enabled(self) -> bool:
         return self.view.window().active_view().match_selector(0, "text.srt")

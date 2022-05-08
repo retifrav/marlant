@@ -16,7 +16,11 @@
         "command": "marlant_insert_new_title"
     },
     {
-        "caption": "MarLant: Split the title",
+        "caption": "MarLant: Split this title",
         "command": "marlant_split_title"
+    },
+    {
+        "caption": "MarLant: Join titles",
+        "command": "marlant_join_titles"
     }
 ]

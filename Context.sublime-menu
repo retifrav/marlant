@@ -1,0 +1,54 @@
+[
+    {
+        "caption": "-"
+    },
+    {
+        "caption": "Marlant",
+        "children":
+        [
+            {
+                "caption": "Insert new title before",
+                "command": "marlant_insert_new_title",
+                "args": {
+                    "after_current_title": false
+                }
+            },
+            {
+                "caption": "Insert new title after",
+                "command": "marlant_insert_new_title",
+                "args": {
+                    "after_current_title": true
+                }
+            },
+            {
+                "caption": "-"
+            },
+            {
+                "caption": "Split this title",
+                "command": "marlant_split_title"
+            },
+            {
+                "caption": "-"
+            },
+            {
+                "caption": "Join this title with the one before",
+                "command": "marlant_join_titles",
+                "args":
+                {
+                    "after_current_title": false
+                }
+            },
+            {
+                "caption": "Join this title with the one after",
+                "command": "marlant_join_titles",
+                "args":
+                {
+                    "after_current_title": true
+                }
+            }
+        ]
+    },
+    {
+        "caption": "-"
+    }
+]

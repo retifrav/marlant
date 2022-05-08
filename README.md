@@ -8,8 +8,13 @@ Sublime Text plugin for translating [SubRip/SRT](https://en.wikipedia.org/wiki/S
 - handy commands for working with subtitles:
     + renumbering titles ordinals
     + inserting new titles
-    + splitting titles in two
+    + splitting a title in two
+    + joining two titles into one
     + empty translation file generation
+- commands can be called from:
+    + Command Palette
+    + tab context menu
+    + text area context menu
 
 ## Credits
 
