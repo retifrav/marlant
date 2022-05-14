@@ -22,5 +22,9 @@
     {
         "caption": "MarLant: Join titles",
         "command": "marlant_join_titles"
+    },
+    {
+        "caption": "MarLant: Shift all timings",
+        "command": "marlant_shift_timings"
     }
 ]

@@ -19,11 +19,11 @@ wrongTitleFormatError: typing.Final[str] = " ".join((
 
 titlePlaceholder: typing.Final[str] = "[ ... ]"
 
+regexLanguageCode: typing.Final[typing.Pattern] = re.compile(r"^[A-Za-z]+$")
 regexSrtNumber: typing.Final[typing.Pattern] = re.compile(r"^[1-9]{1}\d*$")
-regexSrtTiming: typing.Final[typing.Pattern] = re.compile(
-    # r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
-    r"^(\d{2}:\d{2}:\d{2},\d{3}) (-->) (\d{2}:\d{2}:\d{2},\d{3})$"
-)
+# regexSrtTimingString = # r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
+regexSrtTimingString = r"^(\d{2}:\d{2}:\d{2},\d{3}) (-->) (\d{2}:\d{2}:\d{2},\d{3})$"
+regexSrtTiming: typing.Final[typing.Pattern] = re.compile(regexSrtTimingString)
 regexSrtTimeCode: typing.Final[typing.Pattern] = re.compile(
     r"^\d{2}:\d{2}:\d{2},\d{3}$"
 )
@@ -190,6 +190,23 @@ def joinTimings(timingStartStr: str, timingEndStr: str) -> str:
     )
 
 
+def shiftTiming(timingToShift: str, shiftValue: int) -> str:
+    timingMatches = regexSrtTiming.match(timingToShift)
+    if timingMatches is None:
+        raise ValueError("The title timing has a wrong format.")
+    # print(timingMatches.group(0)) # full timing
+    # print(timingMatches.group(1)) # start time
+    # print(timingMatches.group(2)) # separator
+    # print(timingMatches.group(3)) # end time
+    timingStart: int = timeCodeToMilliseconds(timingMatches.group(1)) + shiftValue
+    timingEnd: int = timeCodeToMilliseconds(timingMatches.group(3)) + shiftValue
+    return " ".join((
+        millisecondsToTimeCode(timingStart),
+        timingMatches.group(2),
+        millisecondsToTimeCode(timingEnd)
+    ))
+
+
 def openTranslationFile(
     window: sublime.Window,
     originalFile: pathlib.Path,
@@ -275,11 +292,14 @@ class LanguageInputHandler(sublime_plugin.TextInputHandler):
         return "ru"
 
     def validate(self, text: str) -> bool:
-        return True if text.strip() else False
+        if regexLanguageCode.fullmatch(text) is None:
+            return False
+        else:
+            return True
 
     def preview(self, text: str) -> str:
         if text.strip():
-            return f"some-file-{text}.srt"
+            return sublime.Html(f"some-file-<b>{text}</b>.srt")
         else:
             return sublime.Html(
                 "<i>You need to provide a language suffix.</i>"
@@ -970,8 +990,110 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
         return self.view.window().active_view().match_selector(0, "text.srt")
 
 
-class FileEventListener(sublime_plugin.ViewEventListener):
-    def on_post_save_async(self):
-        # TODO: show translation progress (if in translation mode)
-        if self.view.match_selector(0, "text.srt"):
-            print("File was saved")
+class MillisecondsInputHandler(sublime_plugin.TextInputHandler):
+    def name(self) -> str:
+        return "milliseconds"
+
+    def placeholder(self) -> str:
+        return "positive/negative integer"
+
+    def initial_text(self) -> str:
+        return "1000"
+
+    def validate(self, text: str) -> bool:
+        try:
+            int(text)
+            return True
+        except ValueError:
+            return False
+
+    def preview(self, text: str) -> str:
+        try:
+            text = text.strip()
+            milliseconds: int = int(text)
+            shiftDirection: str = "forward"
+            shiftCountEnding: str = "" if abs(milliseconds) == 1 else "s"
+            if milliseconds > 0:
+                text = re.sub(r"^\+\s*", "", text)
+            else:
+                text = re.sub(r"^-\s*", "", text)
+                shiftDirection = "back"
+            return sublime.Html(
+                " ".join((
+                    f"Shift all timings <b>{text}</b>",
+                    f"millisecond{shiftCountEnding} <b>{shiftDirection}</b>"
+                ))
+            )
+        except ValueError:
+            return sublime.Html(
+                "<i>That needs to be an integer.</i>"
+            )
+
+
+class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
+    def run(self, edit, milliseconds: int):
+        milliseconds = int(milliseconds)
+        if milliseconds == 0:
+            return
+        if abs(milliseconds) > 3600000:
+            sublime.error_message(
+                " ".join((
+                    "Surely you don't need to shift",
+                    "the timings for more than 1 hour."
+                ))
+            )
+            return
+
+        timingsRegions: typing.List[sublime.Region] = (
+            self.view.find_all(regexSrtTimingString)
+        )
+        if len(timingsRegions) < 1:
+            sublime.error_message("Didn't find any timings in the file.")
+            return
+
+        # first title timing cannot go below 0
+        firstTitleTimecodeMatches = regexSrtTiming.match(
+            self.view.substr(timingsRegions[0])
+        )
+        # to keep mypy happy
+        if firstTitleTimecodeMatches is None:
+            sublime.error_message("The first title timing has a wrong format.")
+            return
+        firstTitleTimecodeStart: str = firstTitleTimecodeMatches.group(1)
+        if (
+            milliseconds < 0
+            and timeCodeToMilliseconds(firstTitleTimecodeStart) < abs(milliseconds)
+        ):
+            sublime.error_message("The shift value goes below 00:00:00,000 for the first title.")
+            return
+
+        # just in case, start from the last region, to prevent theoretical regions drift
+        for rgn in reversed(timingsRegions):
+            self.view.replace(
+                edit,
+                rgn,
+                shiftTiming(
+                    self.view.substr(rgn),
+                    milliseconds
+                )
+            )
+
+    def input(self, args):
+        if "milliseconds" not in args:
+            return MillisecondsInputHandler()
+
+    def input_description(self) -> str:
+        return "Timings shift"
+
+    def is_enabled(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+    def is_visible(self) -> bool:
+        return self.view.window().active_view().match_selector(0, "text.srt")
+
+
+# class FileEventListener(sublime_plugin.ViewEventListener):
+#     def on_post_save_async(self):
+#         # TODO: show translation progress (if in translation mode)
+#         if self.view.match_selector(0, "text.srt"):
+#             print("File was saved")
