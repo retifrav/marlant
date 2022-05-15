@@ -1,12 +1,13 @@
 # MarLant
 
-Sublime Text plugin for translating [SubRip/SRT](https://en.wikipedia.org/wiki/SubRip) subtitles. To clarify, it does not translate anything by itself, it just adds some conveniences for those awesome people who translate subtitles to other languages.
+Sublime Text plugin for working with [SubRip/SRT](https://en.wikipedia.org/wiki/SubRip) subtitles.
 
 ## Features
 
 - SubRip / SRT syntax highlighting
-- handy commands for working with subtitles:
-    + validation, SubRip format and additional checks (*text lines length, titles duration, etc*)
+- various functions for working with subtitles:
+    + SubRip format validation
+        * additional checks (*text lines length, titles duration, etc*)
     + renumbering titles ordinals
     + inserting new titles
     + splitting a title in two
@@ -14,10 +15,12 @@ Sublime Text plugin for translating [SubRip/SRT](https://en.wikipedia.org/wiki/S
     + shifting all the timings
     + opening a translation file in a split view
     + generation of an empty translation file
-- commands can be called from:
-    + Command Palette
-    + tab context menu
-    + text area context menu
+
+Commands can be called from:
+
+- Command Palette (`CTRL/COMMAND + SHIFT + P`)
+- tab context menu
+- text area context menu
 
 ## Credits
 
