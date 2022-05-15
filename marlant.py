@@ -38,7 +38,7 @@ regexSrtTimeCode: typing.Final[typing.Pattern] = re.compile(
 )
 
 
-def plugin_loaded():
+def plugin_loaded() -> None:
     # print("MarLant plugin has loaded")
     # when Sublime Text just started, plugins path is unknown,
     # and so settings need to be loaded after the plugin is loaded
@@ -48,7 +48,7 @@ def plugin_loaded():
     pass
 
 
-def plugin_unloaded():
+def plugin_unloaded() -> None:
     # print("MarLant plugin has unloaded")
     pass
 
@@ -114,7 +114,11 @@ def parseTitleString(
     return int(titleOrdinal), titleTiming, titleRegions[2:]
 
 
-def failedValidation(view: sublime.View, lineNumber: int, errorMsg: str):
+def failedValidation(
+    view: sublime.View,
+    lineNumber: typing.Optional[int],
+    errorMsg: str
+) -> None:
     view.set_status(validationStatusKey, "SubRip: FAILING")
     if lineNumber is not None:
         scrollToProblematicLineNumber(view, lineNumber)
@@ -335,7 +339,7 @@ class LanguageInputHandler(sublime_plugin.TextInputHandler):
 
 
 class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
-    def run(self, language: str):
+    def run(self, language: str) -> None:
         activeView = self.window.active_view()
         originalFileValue: str = activeView.file_name()
         if not originalFileValue:
@@ -494,7 +498,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
 
 
 class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
-    def run(self):
+    def run(self) -> None:
         originalFileValue: str = self.window.active_view().file_name()
         if not originalFileValue:
             sublime.error_message(
@@ -533,7 +537,7 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
 
 
 class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
+    def run(self, edit) -> None:
         bufferLinesRegions: typing.List[sublime.Region] = (
             self.view.split_by_newlines(
                 sublime.Region(0, self.view.size())
@@ -594,10 +598,10 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
 
 
 class AfterCurrentTitleInputHandler(sublime_plugin.ListInputHandler):
-    def placeholder(self):
+    def placeholder(self) -> str:
         return "direction"
 
-    def initial_text(self):
+    def initial_text(self) -> str:
         return "after"
 
     def list_items(self):
@@ -608,7 +612,7 @@ class AfterCurrentTitleInputHandler(sublime_plugin.ListInputHandler):
 
 
 class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
-    def run(self, edit, after_current_title: bool):
+    def run(self, edit, after_current_title: bool) -> None:
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
@@ -754,7 +758,7 @@ class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
 
 
 class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
-    def run(self, edit):
+    def run(self, edit) -> None:
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
@@ -855,7 +859,7 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
 
 
 class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
-    def run(self, edit, after_current_title: bool):
+    def run(self, edit, after_current_title: bool) -> None:
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
@@ -1066,7 +1070,7 @@ class MillisecondsInputHandler(sublime_plugin.TextInputHandler):
 
 
 class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
-    def run(self, edit, milliseconds: int):
+    def run(self, edit, milliseconds: int) -> None:
         milliseconds = int(milliseconds)
         if milliseconds == 0:
             return
@@ -1133,7 +1137,7 @@ class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
 
 
 class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
-    def run(self):
+    def run(self) -> None:
         activeView = self.window.active_view()
         activeView.erase_status(validationStatusKey)
 

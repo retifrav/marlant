@@ -1,0 +1,8 @@
+/.github/           export-ignore
+/demonstration/     export-ignore
+
+/*.sublime-project  export-ignore
+
+/.gitignore         export-ignore
+/.gitattributes     export-ignore
+/mypy.ini           export-ignore
