@@ -151,7 +151,10 @@ def millisecondsToTimeCode(milliseconds: int) -> str:
 
 def splitStringInTwo(stringToSplit: str) -> typing.Tuple[str, str]:
     middlePoint: int = len(stringToSplit) // 2
-    while stringToSplit[middlePoint] != " " and middlePoint != len(stringToSplit) - 1:
+    while (
+        stringToSplit[middlePoint] != " "
+        and middlePoint != len(stringToSplit) - 1
+    ):
         middlePoint += 1
     firstHalf: str = stringToSplit[:middlePoint]
     secondHalf: str = stringToSplit[middlePoint:]
@@ -166,17 +169,21 @@ def splitStringInTwo(stringToSplit: str) -> typing.Tuple[str, str]:
 
 def splitTimingInTwo(timingToSplit: str) -> typing.Tuple[str, str]:
     timingMatches = regexSrtTiming.match(timingToSplit)
-    if timingMatches is None:
-        raise ValueError("The title timing has a wrong format.")
     # print(timingMatches.group(0)) # full timing
     # print(timingMatches.group(1)) # start time
     # print(timingMatches.group(2)) # separator
     # print(timingMatches.group(3)) # end time
+    if timingMatches is None:
+        raise ValueError("The title timing has a wrong format.")
     timingStart: int = timeCodeToMilliseconds(timingMatches.group(1))
     timingEnd: int = timeCodeToMilliseconds(timingMatches.group(3))
     timingHalfLength: int = (timingEnd - timingStart) // 2
-    endTimeFirst: str = millisecondsToTimeCode(timingStart + timingHalfLength)
-    startTimeSecond: str = millisecondsToTimeCode(timingEnd - timingHalfLength + 1)
+    endTimeFirst: str = millisecondsToTimeCode(
+        timingStart + timingHalfLength
+    )
+    startTimeSecond: str = millisecondsToTimeCode(
+        timingEnd - timingHalfLength + 1
+    )
     return (
         f"{timingMatches.group(1)} {timingMatches.group(2)} {endTimeFirst}",
         f"{startTimeSecond} {timingMatches.group(2)} {timingMatches.group(3)}"
@@ -186,12 +193,12 @@ def splitTimingInTwo(timingToSplit: str) -> typing.Tuple[str, str]:
 def joinTimings(timingStartStr: str, timingEndStr: str) -> str:
     timingStartMatches = regexSrtTiming.match(timingStartStr)
     timingEndMatches = regexSrtTiming.match(timingEndStr)
-    if timingStartMatches is None or timingEndMatches is None:
-        raise ValueError("One of the title timings has a wrong format.")
     # print(timingStartMatches.group(0)) # full timing
     # print(timingStartMatches.group(1)) # start time
     # print(timingStartMatches.group(2)) # separator
     # print(timingStartMatches.group(3)) # end time
+    if timingStartMatches is None or timingEndMatches is None:
+        raise ValueError("One of the title timings has a wrong format.")
     timingStart: int = timeCodeToMilliseconds(timingStartMatches.group(1))
     timingEnd: int = timeCodeToMilliseconds(timingEndMatches.group(3))
     # if timingEnd < timingStart:
@@ -213,12 +220,12 @@ def joinTimings(timingStartStr: str, timingEndStr: str) -> str:
 
 def shiftTiming(timingToShift: str, shiftValue: int) -> str:
     timingMatches = regexSrtTiming.match(timingToShift)
-    if timingMatches is None:
-        raise ValueError("The title timing has a wrong format.")
     # print(timingMatches.group(0)) # full timing
     # print(timingMatches.group(1)) # start time
     # print(timingMatches.group(2)) # separator
     # print(timingMatches.group(3)) # end time
+    if timingMatches is None:
+        raise ValueError("The title timing has a wrong format.")
     timingStart: int = timeCodeToMilliseconds(timingMatches.group(1)) + shiftValue
     timingEnd: int = timeCodeToMilliseconds(timingMatches.group(3)) + shiftValue
     return " ".join((
@@ -375,8 +382,6 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                         sublime.Region(0, activeView.size())
                     )
                 )
-                # TODO: perhaps also scroll to the problematic line on error,
-                # like on re-numbering titles ordinals
                 for index, region in enumerate(bufferLinesRegions):
                     line = activeView.substr(region).strip()
 
@@ -567,7 +572,9 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                     crntTitleCntStr: str = str(crntTitleCnt)
                     self.view.replace(edit, region, crntTitleCntStr)
                     crntTitleCnt += 1
-                    replacementBufferAdjustment += len(line) - len(crntTitleCntStr)
+                    replacementBufferAdjustment += (
+                        len(line) - len(crntTitleCntStr)
+                    )
                     continue
                 else:
                     sublime.error_message(
@@ -657,13 +664,13 @@ class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
 
         newTitleTiming: str = "00:00:00,000 --> 00:00:00,000"
         timingMatches = regexSrtTiming.match(titleTiming)
-        if timingMatches is None:
-            sublime.error_message("The title timing has a wrong format.")
-            return
         # print(timingMatches.group(0)) # full timing
         # print(timingMatches.group(1)) # start time
         # print(timingMatches.group(2)) # separator
         # print(timingMatches.group(3)) # end time
+        if timingMatches is None:
+            sublime.error_message("The title timing has a wrong format.")
+            return
         timeCodeMS: int = 0
         newTimeCodeMS_start: int = 0
         newTimeCodeMS_end: int = 0
@@ -876,7 +883,7 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
             sublime.CLASS_EMPTY_LINE
         )
 
-        if emptyLineBefore == 0 and after_current_title == False:
+        if emptyLineBefore == 0 and after_current_title is False:
             sublime.error_message(
                 " ".join((
                     "This is the first title,",
@@ -891,7 +898,10 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
         # ---
         # it would be easier if self.view.size() was not counting
         # trailing empty lines in the end of the file
-        if emptyLineAfter >= self.view.size() - 30 and after_current_title == True:
+        if (
+            emptyLineAfter >= self.view.size() - 30
+            and after_current_title is True
+        ):
             sublime.error_message(
                 " ".join((
                     "This is the last title,",
@@ -940,11 +950,15 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
         secondTitleTiming: str = ""
         secondTitleTextRegions: typing.List[sublime.Region] = []
         try:
-            secondTitleOrdinal, secondTitleTiming, secondTitleTextRegions = parseTitleString(
-                self.view,
-                self.view.split_by_newlines(
-                    sublime.Region(secondTitleRegion.a - 1, secondTitleRegion.b)
-                    if secondTitleEmptyLine == 0 else secondTitleRegion
+            secondTitleOrdinal, secondTitleTiming, secondTitleTextRegions = (
+                parseTitleString(
+                    self.view,
+                    self.view.split_by_newlines(
+                        sublime.Region(
+                            secondTitleRegion.a - 1, secondTitleRegion.b
+                        )
+                        if secondTitleEmptyLine == 0 else secondTitleRegion
+                    )
                 )
             )
         except ValueError as ex:
@@ -1083,12 +1097,17 @@ class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
         firstTitleTimecodeStart: str = firstTitleTimecodeMatches.group(1)
         if (
             milliseconds < 0
-            and timeCodeToMilliseconds(firstTitleTimecodeStart) < abs(milliseconds)
+            and timeCodeToMilliseconds(
+                firstTitleTimecodeStart) < abs(milliseconds
+            )
         ):
-            sublime.error_message("The shift value goes below 00:00:00,000 for the first title.")
+            sublime.error_message(
+                "The shift value goes below 00:00:00,000 for the first title."
+            )
             return
 
-        # just in case, start from the last region, to prevent theoretical regions drift
+        # just in case, start from the last region,
+        # to prevent theoretical regions drift
         for rgn in reversed(timingsRegions):
             self.view.replace(
                 edit,
