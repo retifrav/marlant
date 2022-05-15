@@ -1,0 +1,8 @@
+{
+    // characters | longer lines are harder to read
+    "maximum_title_text_line_length": 41,
+    // milliseconds | titles shouldn't disappear from screen too fast
+    "minimum_title_duration": 500,
+    // milliseconds | titles should not stay on screen for too long
+    "maximum_title_duration": 4000
+}

@@ -1,5 +1,14 @@
 [
     {
+        "caption": "Preferences: MarLant Settings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/marlant/marlant.sublime-settings",
+            "user_file": "${packages}/User/marlant.sublime-settings",
+            "default": "{\n}\n"
+        }
+    },
+    {
         "caption": "MarLant: Create a translation file",
         "command": "marlant_create_translation_file"
     },

@@ -7,6 +7,9 @@ import re
 
 import typing
 
+marlantSettings: sublime.Settings = sublime.load_settings(
+    "marlant.sublime-settings"
+)
 
 wrongFormatError: typing.Final[str] = " ".join((
     "The SubRip content seems to have",

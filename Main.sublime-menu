@@ -1,0 +1,27 @@
+[
+    {
+        "id": "preferences",
+        "children": [
+            {
+                "id": "package-settings",
+                "children": [
+                    {
+                        "id": "marlant-settings",
+                        "caption": "MarLant",
+                        "children": [
+                            {
+                                "caption": "Settings",
+                                "command": "edit_settings",
+                                "args": {
+                                    "base_file": "${packages}/marlant/marlant.sublime-settings",
+                                    "user_file": "${packages}/User/marlant.sublime-settings",
+                                    "default": "{\n}\n"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
