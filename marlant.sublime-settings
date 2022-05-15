@@ -4,5 +4,5 @@
     // milliseconds | titles shouldn't disappear from screen too fast
     "minimum_title_duration": 500,
     // milliseconds | titles should not stay on screen for too long
-    "maximum_title_duration": 4000
+    "maximum_title_duration": 6000
 }

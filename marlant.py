@@ -7,10 +7,17 @@ import re
 
 import typing
 
+# when user changes settings, they won't be picked up on plugin_loaded(),
+# so this here should also call load_settings()
 marlantSettings: sublime.Settings = sublime.load_settings(
     "marlant.sublime-settings"
 )
+maxTitleLineLengthFallback: int = 41
+minTitleDurationFallback: int = 500
+maxTitleDurationFallback: int = 6000
 
+validationStatusKey: str = "marlant_validation_status"
+validationError: typing.Final[str] = "Validation error:"
 wrongFormatError: typing.Final[str] = " ".join((
     "The SubRip content seems to have",
     "a wrong format, because"
@@ -19,7 +26,6 @@ wrongTitleFormatError: typing.Final[str] = " ".join((
     "Current title seems to have",
     "incorrect format, because"
 ))
-
 titlePlaceholder: typing.Final[str] = "[ ... ]"
 
 regexLanguageCode: typing.Final[typing.Pattern] = re.compile(r"^[A-Za-z]+$")
@@ -34,6 +40,11 @@ regexSrtTimeCode: typing.Final[typing.Pattern] = re.compile(
 
 def plugin_loaded():
     # print("MarLant plugin has loaded")
+    # when Sublime Text just started, plugins path is unknown,
+    # and so settings need to be loaded after the plugin is loaded
+    marlantSettings = sublime.load_settings(
+        "marlant.sublime-settings"
+    )
     pass
 
 
@@ -101,6 +112,13 @@ def parseTitleString(
             ))
         )
     return int(titleOrdinal), titleTiming, titleRegions[2:]
+
+
+def failedValidation(view: sublime.View, lineNumber: int, errorMsg: str):
+    view.set_status(validationStatusKey, "SubRip: FAILING")
+    if lineNumber is not None:
+        scrollToProblematicLineNumber(view, lineNumber)
+    sublime.error_message(errorMsg)
 
 
 def timeCodeToMilliseconds(timeCode: str) -> int:
@@ -418,7 +436,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                             sublime.error_message(
                                 " ".join((
                                     f"{wrongFormatError} there",
-                                    "should be a time code",
+                                    "should be a correct timing string",
                                     f"on the line {index+1}."
                                 ))
                             )
@@ -1093,6 +1111,281 @@ class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
 
     def is_visible(self) -> bool:
         return self.view.window().active_view().match_selector(0, "text.srt")
+
+
+class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        activeView = self.window.active_view()
+        activeView.erase_status(validationStatusKey)
+
+        maxTitleLineLength: int = marlantSettings.get(
+            "maximum_title_text_line_length",
+            maxTitleLineLengthFallback
+        )
+        minTitleDuration: int = marlantSettings.get(
+            "minimum_title_duration",
+            minTitleDurationFallback
+        )
+        maxTitleDuration: int = marlantSettings.get(
+            "maximum_title_duration",
+            maxTitleDurationFallback
+        )
+
+        bufferLinesRegions: typing.List[sublime.Region] = (
+            activeView.split_by_newlines(
+                sublime.Region(0, activeView.size())
+            )
+        )
+        # there must be at least 3 lines: ordinal, timing and a line of text
+        if len(bufferLinesRegions) < 3:
+            failedValidation(
+                activeView,
+                None,
+                " ".join((
+                    f"{validationError} there are no SubRip titles. At least",
+                    "there should be an ordinal, timing and a line of text."
+                ))
+            )
+            return
+        if activeView.substr(activeView.size()-1) != "\n":
+            failedValidation(
+                activeView,
+                None,
+                " ".join((
+                    f"{validationError} there should",
+                    "be an empty line in the end of file."
+                ))
+            )
+            return
+        if len(activeView.substr(bufferLinesRegions[-1])) == 0:
+            failedValidation(
+                activeView,
+                len(bufferLinesRegions),
+                " ".join((
+                    f"{validationError} there is a redundant",
+                    "empty line in the end of file."
+                ))
+            )
+            return
+
+        hadEmptyLine: bool = False
+        crntTitleStrNumber: int = 0
+        crntTitleCnt: int = 0
+        previousTitleTimeEnd: int = 0
+        for index, region in enumerate(bufferLinesRegions):
+            line = activeView.substr(region)
+            if not line:
+                if hadEmptyLine or index == 0:
+                    failedValidation(
+                        activeView,
+                        index,
+                        " ".join((
+                            f"{validationError} the line {index+1}",
+                            "should not be empty."
+                        ))
+                    )
+                    return
+                else:
+                    if crntTitleStrNumber == 2:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} the line {index+1}",
+                                "should not be empty."
+                            ))
+                        )
+                        return
+                    else:
+                        crntTitleStrNumber = 0
+                        hadEmptyLine = True
+                        continue
+
+            hadEmptyLine = False
+            crntTitleStrNumber += 1
+
+            if line.endswith(" "):
+                failedValidation(
+                    activeView,
+                    index,
+                    " ".join((
+                        f"{validationError} there is a trailing whitespace",
+                        f"on the line {index+1}."
+                    ))
+                )
+                return
+            if line.startswith(" "):
+                failedValidation(
+                    activeView,
+                    index,
+                    " ".join((
+                        f"{validationError} the line {index+1}",
+                        "starts with a whitespace."
+                    ))
+                )
+                return
+
+            # --- ordinal line
+
+            if crntTitleStrNumber == 1:
+                if regexSrtNumber.fullmatch(line) is not None:
+                    crntTitleCntCandidate = int(line)
+                    if crntTitleCntCandidate - crntTitleCnt != 1:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} the title number",
+                                f"on the line {index+1}",
+                                f"({crntTitleCntCandidate}) is not",
+                                "a +1 increment of the previous",
+                                f"title number ({crntTitleCnt})."
+                            ))
+                        )
+                        return
+                    else:
+                        crntTitleCnt = crntTitleCntCandidate
+                        continue
+                else:
+                    failedValidation(
+                        activeView,
+                        index,
+                        " ".join((
+                            f"{validationError} the line {index+1}",
+                            "should contain a title number."
+                        ))
+                    )
+                    return
+
+            # --- timing line
+
+            if crntTitleStrNumber == 2:
+                if regexSrtTiming.fullmatch(line) is not None:
+                    timingMatches = regexSrtTiming.match(line)
+                    # print(timingMatches.group(0)) # full timing
+                    # print(timingMatches.group(1)) # start time
+                    # print(timingMatches.group(2)) # separator
+                    # print(timingMatches.group(3)) # end time
+                    if timingMatches is None:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} the title timing",
+                                f"on the line {index+1} has a wrong format."
+                            ))
+                        )
+                        return
+                    timeStart: int = timeCodeToMilliseconds(
+                        timingMatches.group(1)
+                    )
+                    timeEnd: int = timeCodeToMilliseconds(
+                        timingMatches.group(3)
+                    )
+                    # start timecode should not be "later" than end timecode
+                    if timeStart > timeEnd:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} the start time",
+                                f"of the title on the line {index+1}",
+                                "is bigger than its end time."
+                            ))
+                        )
+                        return
+                    # title time duration should not be too short
+                    if timeEnd - timeStart < minTitleDuration:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} duration of the title",
+                                f"on the line {index+1} is too short",
+                                f"(less than {minTitleDuration} milliseconds)."
+                            ))
+                        )
+                        return
+                    # title time duration should not be too long
+                    if timeEnd - timeStart > maxTitleDuration:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} duration of the title",
+                                f"on the line {index+1} is too long",
+                                f"(more than {maxTitleDuration} milliseconds)."
+                            ))
+                        )
+                        return
+                    # timing should not overlap with the previous one
+                    if crntTitleCnt > 1 and timeStart <= previousTitleTimeEnd:
+                        failedValidation(
+                            activeView,
+                            index,
+                            " ".join((
+                                f"{validationError} the title",
+                                f"on the line {index+1} starts before",
+                                f"the previous one ends."
+                            ))
+                        )
+                        return
+                    # timing is good
+                    previousTitleTimeEnd = timeEnd
+                    continue
+                else:
+                    failedValidation(
+                        activeView,
+                        index,
+                        " ".join((
+                            f"{validationError} there",
+                            "should be a correct timing string",
+                            f"on the line {index+1}."
+                        ))
+                    )
+                    return
+
+            # --- title text lines
+
+            if (len(line) > maxTitleLineLength):
+                failedValidation(
+                    activeView,
+                    index,
+                    " ".join((
+                        f"{validationError} the line {index+1}",
+                        f"is longer than {maxTitleLineLength} characters.",
+                        f"Longer lines are harder to read."
+                    ))
+                )
+                return
+            if regexSrtTiming.fullmatch(line) is not None:
+                failedValidation(
+                    activeView,
+                    index,
+                    " ".join((
+                        f"{validationError} there is a timing string",
+                        f"on the line {index+1}. Most likely there is",
+                        f"a missing empty line on one of the previous lines."
+                    ))
+                )
+                return
+
+        if crntTitleStrNumber < 3:
+            failedValidation(
+                activeView,
+                len(bufferLinesRegions),
+                " ".join((
+                    f"{validationError} the last title",
+                    f"doesn't have any text lines."
+                ))
+            )
+            return
+        else:
+            activeView.set_status(validationStatusKey, "SubRip: OK")
+            sublime.message_dialog(
+                "All good! No problems found."
+                # "checked {crntTitleCnt} titles."
+            )
 
 
 # class FileEventListener(sublime_plugin.ViewEventListener):

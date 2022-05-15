@@ -35,5 +35,9 @@
     {
         "caption": "MarLant: Shift all timings",
         "command": "marlant_shift_timings"
+    },
+    {
+        "caption": "MarLant: Validate subtitles",
+        "command": "marlant_validate_subtitles"
     }
 ]
