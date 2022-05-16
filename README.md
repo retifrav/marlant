@@ -1,7 +1,5 @@
 # MarLant
 
-Sublime Text plugin for working with [SubRip/SRT](https://en.wikipedia.org/wiki/SubRip) subtitles.
-
 <!-- MarkdownTOC -->
 
 - [About](#about)
@@ -21,7 +19,11 @@ Sublime Text plugin for working with [SubRip/SRT](https://en.wikipedia.org/wiki/
 
 ## About
 
+[Sublime Text](https://sublimetext.com/) plugin for working with [SubRip/SRT](https://en.wikipedia.org/wiki/SubRip) subtitles.
+
 ![Sublime Text plugin MarLant](https://raw.githubusercontent.com/retifrav/marlant/master/misc/MarLant.png "MarLant, context menu")
+
+*UI theme and color scheme used on the screenshot and demonstration videos below: [One Dark](https://github.com/andresmichel/one-dark-theme).*
 
 ### Features
 
