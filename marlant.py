@@ -1411,10 +1411,10 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
             )
 
     def is_enabled(self) -> bool:
-        return self.view.window().active_view().match_selector(0, "text.srt")
+        return self.window.active_view().match_selector(0, "text.srt")
 
     def is_visible(self) -> bool:
-        return self.view.window().active_view().match_selector(0, "text.srt")
+        return self.window.active_view().match_selector(0, "text.srt")
 
 
 # class FileEventListener(sublime_plugin.ViewEventListener):
