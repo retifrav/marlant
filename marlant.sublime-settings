@@ -1,6 +1,8 @@
 {
     // characters | longer lines are harder to read
     "maximum_title_text_line_length": 41,
+    // titles with too many text lines are obstructing the view
+    "maximum_title_text_lines": 3,
     // milliseconds | titles shouldn't disappear from screen too fast
     "minimum_title_duration": 500,
     // milliseconds | titles should not stay on screen for too long

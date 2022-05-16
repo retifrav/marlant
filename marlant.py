@@ -13,6 +13,7 @@ marlantSettings: sublime.Settings = sublime.load_settings(
     "marlant.sublime-settings"
 )
 maxTitleLineLengthFallback: int = 41
+maxTitleLinesFallback = 3
 minTitleDurationFallback: int = 500
 maxTitleDurationFallback: int = 6000
 
@@ -1145,6 +1146,10 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
             "maximum_title_text_line_length",
             maxTitleLineLengthFallback
         )
+        maxTitleLines: int = marlantSettings.get(
+            "maximum_title_text_lines",
+            maxTitleLinesFallback
+        )
         minTitleDuration: int = marlantSettings.get(
             "minimum_title_duration",
             minTitleDurationFallback
@@ -1370,6 +1375,17 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
 
             # --- title text lines
 
+            if crntTitleStrNumber > 2 + maxTitleLines:
+                failedValidation(
+                    activeView,
+                    index,
+                    " ".join((
+                        f"{validationError} this title has too many",
+                        f"text lines (more than {maxTitleLines}).",
+                        "It may be obstructing the view."
+                    ))
+                )
+                return
             if (len(line) > maxTitleLineLength):
                 failedValidation(
                     activeView,
@@ -1393,6 +1409,7 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                 )
                 return
 
+        # finished iterating through the lines, one last check
         if crntTitleStrNumber < 3:
             failedValidation(
                 activeView,
