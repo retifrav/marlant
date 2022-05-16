@@ -45,6 +45,18 @@ Commands can be called from:
 
 ### Demonstration
 
+Validating the file:
+
+https://user-images.githubusercontent.com/6904927/168661160-0185a62f-6b0c-43f0-b38a-a7b61d5ff0ba.mp4
+
+Joining and splitting titles:
+
+https://user-images.githubusercontent.com/6904927/168662707-c775db65-b73e-4347-b8fa-209741ea85b9.mp4
+
+Creating and openning a translation file:
+
+https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-895e-aa7754f62cf5.mp4
+
 ## Installing
 
 - via [Package Control](https://packagecontrol.io/):
