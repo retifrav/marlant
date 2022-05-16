@@ -1,5 +1,5 @@
 /.github/           export-ignore
-/demonstration/     export-ignore
+/misc/              export-ignore
 
 /*.sublime-project  export-ignore
 

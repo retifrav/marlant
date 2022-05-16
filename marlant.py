@@ -949,7 +949,7 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
             sublime.CLASS_EMPTY_LINE
         )
 
-        secondTitleRegion: sublime.Region = sublime.Region(0,0)
+        secondTitleRegion: sublime.Region = sublime.Region(0, 0)
         if after_current_title:
             secondTitleRegion = sublime.Region(
                 currentTitleRegion.b + 2,
