@@ -47,7 +47,7 @@ Commands can be called from:
 
 Validating the file:
 
-https://user-images.githubusercontent.com/6904927/168664708-5d705dfd-47d6-4016-97ad-1fb5afd368c7.mp4
+https://user-images.githubusercontent.com/6904927/168665456-589fd743-86a5-4c4d-97b2-56a6ca40435a.mp4
 
 Joining and splitting titles:
 
