@@ -929,16 +929,22 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
         firstTitleTiming: str = ""
         firstTitleTextRegions: typing.List[sublime.Region] = []
         try:
-            firstTitleOrdinal, firstTitleTiming, firstTitleTextRegions = parseTitleString(
-                self.view,
-                self.view.split_by_newlines(currentTitleRegion)
+            firstTitleOrdinal, firstTitleTiming, firstTitleTextRegions = (
+                parseTitleString(
+                    self.view,
+                    self.view.split_by_newlines(currentTitleRegion)
+                )
             )
         except ValueError as ex:
             sublime.error_message(str(ex))
             return
 
         secondTitleEmptyLine: int = self.view.find_by_class(
-            currentTitleRegion.b + 1 if after_current_title else currentTitleRegion.a - 1,
+            (
+                currentTitleRegion.b + 1
+                if after_current_title
+                else currentTitleRegion.a - 1
+            ),
             after_current_title,
             sublime.CLASS_EMPTY_LINE
         )
@@ -976,7 +982,8 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
             return
 
         joinedTitleRegions: typing.List[sublime.Region] = (
-            firstTitleTextRegions + secondTitleTextRegions if after_current_title
+            firstTitleTextRegions + secondTitleTextRegions
+            if after_current_title
             else secondTitleTextRegions + firstTitleTextRegions
         )
         joinedTitleTexts: typing.List[str] = []
