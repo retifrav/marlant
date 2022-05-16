@@ -864,6 +864,11 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
+        maxTitleLineLength: int = marlantSettings.get(
+            "maximum_title_text_line_length",
+            maxTitleLineLengthFallback
+        )
+
         if len(
             self.view.substr(
                 self.view.line(currentTitlePoint)
@@ -975,9 +980,17 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
             else secondTitleTextRegions + firstTitleTextRegions
         )
         joinedTitleTexts: typing.List[str] = []
+        joinedTitleTextLength: int = 0
         for rgn in joinedTitleRegions:
             joinedTitleTexts.append(self.view.substr(rgn).strip())
-        joinedTitleText: str = "\n".join(joinedTitleTexts)
+            joinedTitleTextLength += rgn.size()
+        # if both titles total text length is less than the allowed maximum,
+        # join them into one line
+        joinedTitleText: str = (
+            "\n".join(joinedTitleTexts)
+            if joinedTitleTextLength > maxTitleLineLength
+            else " ".join(joinedTitleTexts)
+        )
 
         joinedTitleTiming: str = (
             firstTitleTiming if after_current_title
