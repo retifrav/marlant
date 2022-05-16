@@ -4,9 +4,11 @@ Sublime Text plugin for working with [SubRip/SRT](https://en.wikipedia.org/wiki/
 
 <!-- MarkdownTOC -->
 
-- [Features](#features)
+- [About](#about)
+    - [Features](#features)
+    - [Demonstration](#demonstration)
 - [Installing](#installing)
-- [Requirements](#requirements)
+    - [Requirements](#requirements)
 - [FAQ](#faq)
     - [No plugin commands available anywhere](#no-plugin-commands-available-anywhere)
     - [Why the Sublime Text 4 requirement and v4099 as the lowest](#why-the-sublime-text-4-requirement-and-v4099-as-the-lowest)
@@ -17,9 +19,11 @@ Sublime Text plugin for working with [SubRip/SRT](https://en.wikipedia.org/wiki/
 
 <!-- /MarkdownTOC -->
 
+## About
+
 ![Sublime Text plugin MarLant](https://raw.githubusercontent.com/retifrav/marlant/master/misc/MarLant.png "MarLant, context menu")
 
-## Features
+### Features
 
 - SubRip / SRT syntax highlighting
 - various functions for working with subtitles:
@@ -39,6 +43,8 @@ Commands can be called from:
 - tab context menu
 - text area context menu
 
+### Demonstration
+
 ## Installing
 
 - via [Package Control](https://packagecontrol.io/):
@@ -48,7 +54,7 @@ Commands can be called from:
         * the exact path to packages can be opened with `CTRL/COMMAND + SHIFT + P` → `Preferences: Browse Packages`
         * you might want to skip copying resources listed in `.gitattributes` file
 
-## Requirements
+### Requirements
 
 - Sublime Text v4099 or newer
     + Python plugin host v3.8 or newer
@@ -80,5 +86,5 @@ One day, my log will have something to say about this.
 - SubRip / SRT syntax definition is based on [this implementation](https://github.com/SalGnt/Sublime-SRT/blob/master/SRT.tmLanguage), converted to `.sublime-syntax` format with [SublimeSyntaxConvertor tool](https://github.com/aziz/SublimeSyntaxConvertor)
 - timecode parsing and composing is based on the code from [srt-shift](https://github.com/adeel/srt-shift/blob/master/srt_shift.py)
 - thanks to:
-    + [OdatNerd](https://odatnurd.net/) for his [Plugin 101 - How to write Packages for Sublime](https://youtube.com/playlist?list=PLGfKZJVuHW91zln4ADyZA3sxGEmq32Wse) video-course
+    + [OdatNurd](https://odatnurd.net/) for his [Plugin 101 - How to write Packages for Sublime](https://youtube.com/playlist?list=PLGfKZJVuHW91zln4ADyZA3sxGEmq32Wse) video-course
     + friendly and helpful Sublime Text community for answering my (*sometimes stupid*) questions
