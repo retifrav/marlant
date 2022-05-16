@@ -481,7 +481,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
             str(generatedFile)
         )
 
-    def input(self, args):
+    def input(self, args: dict) -> sublime_plugin.TextInputHandler:
         if "language" not in args:
             return LanguageInputHandler()
 
@@ -537,7 +537,7 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
 
 
 class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
-    def run(self, edit) -> None:
+    def run(self, edit: sublime.Edit) -> None:
         bufferLinesRegions: typing.List[sublime.Region] = (
             self.view.split_by_newlines(
                 sublime.Region(0, self.view.size())
@@ -604,7 +604,7 @@ class AfterCurrentTitleInputHandler(sublime_plugin.ListInputHandler):
     def initial_text(self) -> str:
         return "after"
 
-    def list_items(self):
+    def list_items(self) -> typing.List[typing.Tuple[str, bool]]:
         return [
             ("after", True),
             ("before", False)
@@ -612,7 +612,7 @@ class AfterCurrentTitleInputHandler(sublime_plugin.ListInputHandler):
 
 
 class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
-    def run(self, edit, after_current_title: bool) -> None:
+    def run(self, edit: sublime.Edit, after_current_title: bool) -> None:
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
@@ -743,7 +743,7 @@ class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
 
         self.view.run_command("marlant_renumber_titles")
 
-    def input(self, args):
+    def input(self, args: dict) -> sublime_plugin.TextInputHandler:
         if "after_current_title" not in args:
             return AfterCurrentTitleInputHandler()
 
@@ -758,7 +758,7 @@ class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
 
 
 class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
-    def run(self, edit) -> None:
+    def run(self, edit: sublime.Edit) -> None:
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
@@ -859,7 +859,7 @@ class MarlantSplitTitleCommand(sublime_plugin.TextCommand):
 
 
 class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
-    def run(self, edit, after_current_title: bool) -> None:
+    def run(self, edit: sublime.Edit, after_current_title: bool) -> None:
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
@@ -1015,7 +1015,7 @@ class MarlantJoinTitlesCommand(sublime_plugin.TextCommand):
 
         self.view.run_command("marlant_renumber_titles")
 
-    def input(self, args):
+    def input(self, args: dict) -> sublime_plugin.TextInputHandler:
         if "after_current_title" not in args:
             return AfterCurrentTitleInputHandler()
 
@@ -1070,7 +1070,7 @@ class MillisecondsInputHandler(sublime_plugin.TextInputHandler):
 
 
 class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
-    def run(self, edit, milliseconds: int) -> None:
+    def run(self, edit: sublime.Edit, milliseconds: int) -> None:
         milliseconds = int(milliseconds)
         if milliseconds == 0:
             return
@@ -1122,7 +1122,7 @@ class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
                 )
             )
 
-    def input(self, args):
+    def input(self, args: dict) -> sublime_plugin.TextInputHandler:
         if "milliseconds" not in args:
             return MillisecondsInputHandler()
 
