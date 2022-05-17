@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 
 # import functools
+from collections import Counter
 import pathlib
 import re
 
@@ -16,6 +17,7 @@ maxTitleLineLengthFallback: int = 41
 maxTitleLinesFallback = 3
 minTitleDurationFallback: int = 500
 maxTitleDurationFallback: int = 6000
+htmlTagsToWatchForFallback: typing.List[str] = ["b", "i", "u", "font"]
 
 validationStatusKey: str = "marlant_validation_status"
 validationError: typing.Final[str] = "Validation error:"
@@ -34,9 +36,7 @@ regexSrtNumber: typing.Final[typing.Pattern] = re.compile(r"^[1-9]{1}\d*$")
 # regexSrtTimingString = # r"^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}$"
 regexSrtTimingString = r"^(\d{2}:\d{2}:\d{2},\d{3}) (-->) (\d{2}:\d{2}:\d{2},\d{3})$"
 regexSrtTiming: typing.Final[typing.Pattern] = re.compile(regexSrtTimingString)
-regexSrtTimeCode: typing.Final[typing.Pattern] = re.compile(
-    r"^\d{2}:\d{2}:\d{2},\d{3}$"
-)
+regexSrtTimeCode: typing.Final[typing.Pattern] = re.compile(r"^\d{2}:\d{2}:\d{2},\d{3}$")
 
 
 def plugin_loaded() -> None:
@@ -124,6 +124,29 @@ def failedValidation(
     if lineNumber is not None:
         scrollToProblematicLineNumber(view, lineNumber)
     sublime.error_message(errorMsg)
+
+
+def checkForUnmatchedHtmlTags(
+    openHtmlTags: typing.List[str],
+    closeHtmlTags: typing.List[str]
+) -> typing.Tuple[typing.List[str], typing.List[str]]:
+    unmatchedOpenTags: typing.List[str] = []
+    unmatchedCloseTags: typing.List[str] = []
+    # print(f"Collected open tags: {openHtmlTags}")
+    # print(f"Collected closing tags: {closeHtmlTags}")
+    if len(openHtmlTags) > 0:
+        unmatchedOpenTags = list(
+            Counter(openHtmlTags) - Counter(closeHtmlTags)
+        )
+        # if len(unmatchedOpenTags.keys()) > 0:
+        #     print(f"Unmatched open tags: {','.join(unmatchedOpenTags.keys())}")
+    if len(closeHtmlTags) > 0:
+        unmatchedCloseTags = list(
+            Counter(closeHtmlTags) - Counter(openHtmlTags)
+        )
+        # if len(unmatchedCloseTags.keys()) > 0:
+        #     print(f"Unmatched close tags: {','.join(unmatchedCloseTags.keys())}")
+    return (unmatchedOpenTags, unmatchedCloseTags)
 
 
 def timeCodeToMilliseconds(timeCode: str) -> int:
@@ -1157,6 +1180,7 @@ class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
         return self.view.window().active_view().match_selector(0, "text.srt")
 
 
+# some more about SubRip validation: https://ale5000.altervista.org/subtitles.htm
 class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
     def run(self) -> None:
         activeView = self.window.active_view()
@@ -1177,6 +1201,34 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
         maxTitleDuration: int = marlantSettings.get(
             "maximum_title_duration",
             maxTitleDurationFallback
+        )
+        htmlTagsToWatchFor: typing.List[str] = marlantSettings.get(
+            "html_tags_to_watch_for",
+            htmlTagsToWatchForFallback
+        )
+        try:
+            if not isinstance(htmlTagsToWatchFor, list):
+                raise TypeError("Tags need to be a list of strings")
+            htmlTagsToWatchForJoined = "|".join(htmlTagsToWatchFor)
+        except TypeError as ex:
+            print(f"MarLant | ERROR | Wrong tags format: {ex}")
+            sublime.error_message(
+                " ".join((
+                    "Looks like you've set the tags list incorrectly,",
+                    "check your plugin settings."
+                ))
+            )
+            return
+
+        # this regular expression is very naive, as it will also find
+        # <underestimated>, <incredibly>, <beautiful>, <fontange> tags,
+        # not just <u>, <i>, <b>, <font>
+        regexHTMLtagOpen: typing.Final[typing.Pattern] = re.compile(
+            f"(<({htmlTagsToWatchForJoined})[^>]*>)"
+        )
+        # this one is quite okay though
+        regexHTMLtagClose: typing.Final[typing.Pattern] = re.compile(
+            f"(<\\/({htmlTagsToWatchForJoined})>)"
         )
 
         bufferLinesRegions: typing.List[sublime.Region] = (
@@ -1220,6 +1272,8 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
         crntTitleStrNumber: int = 0
         crntTitleCnt: int = 0
         previousTitleTimeEnd: int = 0
+        openHtmlTags: typing.List[str] = []
+        closeHtmlTags: typing.List[str] = []
         for index, region in enumerate(bufferLinesRegions):
             line = activeView.substr(region)
             if not line:
@@ -1244,7 +1298,36 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                             ))
                         )
                         return
-                    else:
+                    else:  # new title starts
+                        # check if there are problems with HTML tags collected
+                        # in the previous title
+                        uot, uct = checkForUnmatchedHtmlTags(openHtmlTags, closeHtmlTags)
+                        if len(uot) > 0:
+                            failedValidation(
+                                activeView,
+                                index - 1,
+                                " ".join((
+                                    f"{validationError} this title has",
+                                    "unmatched open HTML tags:",
+                                    f"{', '.join(uot)}."
+                                ))
+                            )
+                            return
+                        if len(uct) > 0:
+                            failedValidation(
+                                activeView,
+                                index - 1,
+                                " ".join((
+                                    f"{validationError} this title has",
+                                    "unmatched closing HTML tags:",
+                                    f"{', '.join(uct)}."
+                                ))
+                            )
+                            return
+
+                        # reset everything
+                        openHtmlTags = []
+                        closeHtmlTags = []
                         crntTitleStrNumber = 0
                         hadEmptyLine = True
                         continue
@@ -1395,6 +1478,21 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
 
             # --- title text lines
 
+            # possible HTML tags
+            thisLineTagsLength = 0
+            openTagsMatches = regexHTMLtagOpen.findall(line)
+            closeTagsMatches = regexHTMLtagClose.findall(line)
+            if len(openTagsMatches) > 0:
+                for m in openTagsMatches:
+                    thisLineTagsLength += len(m[0])
+                    openHtmlTags.append(f"<{m[1]}>")
+                    # print(f"Found open tag: {m[1]}, full length: {len(m[0])}")
+            if len(closeTagsMatches) > 0:
+                for m in closeTagsMatches:
+                    thisLineTagsLength += len(m[0])
+                    closeHtmlTags.append(f"<{m[1]}>")
+                    # print(f"Found closing tag: {m[1]}, full length: {len(m[0])}")
+
             if crntTitleStrNumber > 2 + maxTitleLines:
                 failedValidation(
                     activeView,
@@ -1406,7 +1504,7 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                     ))
                 )
                 return
-            if (len(line) > maxTitleLineLength):
+            if (len(line) - thisLineTagsLength > maxTitleLineLength):
                 failedValidation(
                     activeView,
                     index,
@@ -1429,7 +1527,8 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                 )
                 return
 
-        # finished iterating through the lines, one last check
+        # --- done iterating through the title text lines
+
         if crntTitleStrNumber < 3:
             failedValidation(
                 activeView,
@@ -1440,12 +1539,38 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                 ))
             )
             return
-        else:
-            activeView.set_status(validationStatusKey, "SubRip: OK")
-            sublime.message_dialog(
-                "All good! No problems found."
-                # "checked {crntTitleCnt} titles."
+
+        # check if there are problems with HTML tags collected
+        # in the last title. Sadly, this needs to be done here too,
+        # as doing that only at the new title beginning will miss
+        # the last title
+        uot, uct = checkForUnmatchedHtmlTags(openHtmlTags, closeHtmlTags)
+        if len(uot) > 0:
+            failedValidation(
+                activeView,
+                len(bufferLinesRegions) - 1,
+                " ".join((
+                    f"{validationError} last title has",
+                    f"unmatched open HTML tags: {', '.join(uot)}."
+                ))
             )
+            return
+        if len(uct) > 0:
+            failedValidation(
+                activeView,
+                len(bufferLinesRegions) - 1,
+                " ".join((
+                    f"{validationError} last title has",
+                    f"unmatched closing HTML tags: {', '.join(uct)}."
+                ))
+            )
+            return
+
+        activeView.set_status(validationStatusKey, "SubRip: OK")
+        sublime.message_dialog(
+            "All good! No problems found."
+            # "checked {crntTitleCnt} titles."
+        )
 
     def is_enabled(self) -> bool:
         return self.window.active_view().match_selector(0, "text.srt")
