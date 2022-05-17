@@ -9,6 +9,7 @@
     - [Requirements](#requirements)
 - [FAQ](#faq)
     - [No plugin commands available anywhere](#no-plugin-commands-available-anywhere)
+    - [Are there keybindings](#are-there-keybindings)
     - [Why the Sublime Text 4 requirement and v4099 as the lowest](#why-the-sublime-text-4-requirement-and-v4099-as-the-lowest)
     - [Why the Python 3.8 plugin host requirement](#why-the-python-38-plugin-host-requirement)
     - [The plugin is licensed under GPLv3, will it infect everything else with GPLv3](#the-plugin-is-licensed-under-gplv3-will-it-infect-everything-else-with-gplv3)
@@ -78,6 +79,25 @@ https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-8
 ### No plugin commands available anywhere
 
 Check that the active file/view has the SubRip/SRT syntax/scope, as the plugin functionality is only enabled there.
+
+### Are there keybindings
+
+Not out of the box, but you can certainly [create your own keybinding](https://www.sublimetext.com/docs/key_bindings.html) for any plugin command. To get a command name and its arguments, enable commands logging (`sublime.log_commands(True)`) in Console.
+
+For example, the following adds two keybindings: for inserting a new title before and after the current one:
+
+``` json
+{
+    "keys": ["super+alt+i", "super+alt+b"],
+    "command": "marlant_insert_new_title",
+    "args": {"after_current_title": false }
+},
+{
+    "keys": ["super+alt+i", "super+alt+a"],
+    "command": "marlant_insert_new_title",
+    "args": {"after_current_title": true }
+}
+```
 
 ### Why the Sublime Text 4 requirement and v4099 as the lowest
 
