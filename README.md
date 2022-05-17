@@ -41,9 +41,9 @@
 
 Commands can be called from:
 
-- Command Palette (`CTRL/COMMAND + SHIFT + P`)
-- tab context menu
-- text area context menu
+- Command Palette (`CTRL/COMMAND + SHIFT + P`) (*all the commands*)
+- tab context menu (*translation file creation/opening*)
+- text area context menu (*inserting, splitting and joining titles*)
 
 ### Demonstration
 
