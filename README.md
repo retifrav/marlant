@@ -65,9 +65,10 @@ https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-8
 - via [Package Control](https://packagecontrol.io/):
     + `CTRL/COMMAND + SHIFT + P` → `Package Control: Install Package` → `MarLant`
 - manually:
-    + clone repository and copy its folder (`marlant`) to `/path/to/Sublime Text/Packages/`
+    + clone the repository and copy its folder (`marlant`) to `/path/to/Sublime Text/Packages/`
         * the exact path to packages can be opened with `CTRL/COMMAND + SHIFT + P` → `Preferences: Browse Packages`
         * you might want to skip copying resources listed in `.gitattributes` file
+            - or just download an archive attached to the latest [tag](https://github.com/retifrav/marlant/tags)
 
 ### Requirements
 
@@ -101,11 +102,11 @@ For example, the following adds two keybindings: for inserting a new title befor
 
 ### Why the Sublime Text 4 requirement and v4099 as the lowest
 
-The version 4 in general is because that's there Python plugin host v3.8 was added. The v4099 as the minimal one is because it's the one with the latest Python 3.8.8 plugin host. But of course most likely the plugin will also work fine with the very first v4050.
+The version 4 in general is because that's where Python plugin host v3.8 was added. And the v4099 specifically as the minimal one is because it's the one with the latest plugin host v3.8.8. But of course most likely the plugin will also work fine with the very first v4050.
 
 ### Why the Python 3.8 plugin host requirement
 
-Mostly because of [f-strings](https://peps.python.org/pep-0498/) that were added in Python 3.6 and so are not available with v3.3 plugin host.
+Mostly because of [f-strings](https://peps.python.org/pep-0498/) that were added only in Python 3.6 and thus are not available with plugin host v3.3.
 
 ### The plugin is licensed under GPLv3, will it infect everything else with GPLv3
 

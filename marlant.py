@@ -8,13 +8,11 @@ import re
 
 import typing
 
-# when user changes settings, they won't be picked up on plugin_loaded(),
-# so this here should also call load_settings()
-marlantSettings: sublime.Settings = sublime.load_settings(
-    "marlant.sublime-settings"
-)
+# will be read on plugin_loaded()
+marlantSettings: sublime.Settings = {}
+# fallback values
 maxTitleLineLengthFallback: int = 41
-maxTitleLinesFallback = 3
+maxTitleLinesFallback: int = 3
 minTitleDurationFallback: int = 500
 maxTitleDurationFallback: int = 6000
 htmlTagsToWatchForFallback: typing.List[str] = ["b", "i", "u", "font"]
@@ -40,6 +38,7 @@ regexSrtTimeCode: typing.Final[typing.Pattern] = re.compile(r"^\d{2}:\d{2}:\d{2}
 
 
 def plugin_loaded() -> None:
+    global marlantSettings
     # print("MarLant plugin has loaded")
     # when Sublime Text just started, plugins path is unknown,
     # and so settings need to be loaded after the plugin is loaded

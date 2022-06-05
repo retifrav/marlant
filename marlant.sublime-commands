@@ -3,7 +3,7 @@
         "caption": "Preferences: MarLant Settings",
         "command": "edit_settings",
         "args": {
-            "base_file": "${packages}/marlant/marlant.sublime-settings",
+            "base_file": "${packages}/MarLant/marlant.sublime-settings",
             "user_file": "${packages}/User/marlant.sublime-settings",
             "default": "{\n}\n"
         }
