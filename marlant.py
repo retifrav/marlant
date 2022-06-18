@@ -16,6 +16,7 @@ maxTitleLinesFallback: int = 3
 minTitleDurationFallback: int = 500
 maxTitleDurationFallback: int = 6000
 htmlTagsToWatchForFallback: typing.List[str] = ["b", "i", "u", "font"]
+placeholdersInsteadOfEmptyLinesFallback: bool = True
 
 validationStatusKey: str = "marlant_validation_status"
 validationError: typing.Final[str] = "Validation error:"
@@ -375,6 +376,15 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
             sublime.error_message("This is not an .srt file.")
             return
 
+        placeholdersInsteadOfEmptyLines: bool = marlantSettings.get(
+            "placeholders_instead_of_empty_lines",
+            placeholdersInsteadOfEmptyLinesFallback
+        )
+        whatToReplaceTitlesWith: str = (
+            titlePlaceholder if placeholdersInsteadOfEmptyLines
+            else ""
+        )
+
         # there should be no need to check for empty string,
         # because TextInputHandler.validate() takes care of this
         language = language.strip()
@@ -475,8 +485,8 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
                             scrollToProblematicLineNumber(activeView, index)
                             return
 
-                    # replace actual titles with empty lines
-                    gf.write("\n")
+                    # replace actual titles
+                    gf.write(f"{whatToReplaceTitlesWith}\n")
 
         # except UnicodeDecodeError as ex:
         #     sublime.error_message(
