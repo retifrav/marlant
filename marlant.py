@@ -305,7 +305,7 @@ def openTranslationFile(
                 )
                 selectedFileView = window.find_open_file(selectedFile)
             except Exception as ex:
-                print(f"error: {ex}")
+                print(f"[ERROR] {ex}")
                 sublime.error_message(
                     " ".join((
                         "There was an error trying to open translation file.",
@@ -498,7 +498,7 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         #     )
         #     return
         except Exception as ex:
-            print(f"error: {ex}")
+            print(f"[ERROR] {ex}")
             sublime.error_message(
                 " ".join((
                     "There was an error writing to the generated file.",
@@ -1195,6 +1195,18 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
         activeView = self.window.active_view()
         activeView.erase_status(validationStatusKey)
 
+        # try to get project settings
+        projectPreferences: sublime.Value = None
+        ignoredTitles: typing.List[int] = []
+        if self.window.project_file_name():
+            projectPreferences = self.window.project_data().get("preferences")
+        if projectPreferences:
+            ignoredTitles = projectPreferences.get(
+                "validation", {}
+            ).get(
+                "ignored-titles", []
+            )
+
         maxTitleLineLength: int = marlantSettings.get(
             "maximum_title_text_line_length",
             maxTitleLineLengthFallback
@@ -1397,6 +1409,21 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                     )
                     return
 
+            # --- checking for ignored titles
+
+            # validation checks after this point are ignorable (more or less),
+            # so they can be skipped, if translator/editor wants to exclude them
+            if crntTitleCnt in ignoredTitles:
+                if crntTitleStrNumber == 2:  # don't repeat the warning
+                    print(
+                        " ".join((
+                            f"[WARNING] Title #{crntTitleCnt}",
+                            "is in the ignore list, so it will not",
+                            "go through all the checks"
+                        ))
+                    )
+                continue
+
             # --- timing line
 
             if crntTitleStrNumber == 2:
@@ -1576,10 +1603,16 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
             return
 
         activeView.set_status(validationStatusKey, "SubRip: OK")
-        sublime.message_dialog(
-            "All good! No problems found."
+        validationSuccess = "".join((
+            "All good! No problems found."  # ...found, ",
             # "checked {crntTitleCnt} titles."
-        )
+        ))
+        if any(ignoredTitles):
+            validationSuccess += " ".join((
+                f" But do remember that you have {len(ignoredTitles)}",
+                "ignored titles in project preferences."
+            ))
+        sublime.message_dialog(validationSuccess)
 
     def is_enabled(self) -> bool:
         return self.window.active_view().match_selector(0, "text.srt")

@@ -7,6 +7,7 @@
     - [Demonstration](#demonstration)
 - [Installing](#installing)
     - [Requirements](#requirements)
+- [Using projects](#using-projects)
 - [FAQ](#faq)
     - [No plugin commands available anywhere](#no-plugin-commands-available-anywhere)
     - [Are there keybindings](#are-there-keybindings)
@@ -74,6 +75,42 @@ https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-8
 
 - Sublime Text v4099 or newer
     + Python plugin host v3.8 or newer
+
+## Using projects
+
+As you might know, Sublime Text has [projects](https://www.sublimetext.com/docs/projects.html), and the plugin can and does use the project file for storing certain settings.
+
+Here's an example of a project:
+
+``` json
+{
+    "folders":
+    [
+        {
+            "path": ".",
+            "folder_exclude_patterns":
+            [
+                ".git"
+            ]
+        }
+    ],
+    "preferences":
+    {
+        "validation":
+        {
+            "ignored-titles":
+            [
+                1,
+                3
+            ]
+        }
+    }
+}
+```
+
+As you can see, translator/editor added titles `1` and `3` to the list of the ignored titles, and so those will be now excluded from the most validation checks.
+
+There will be more preferences values added later.
 
 ## FAQ
 
