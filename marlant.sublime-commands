@@ -29,6 +29,10 @@
         "command": "marlant_split_title"
     },
     {
+        "caption": "MarLant: Exclude this title from validation checks",
+        "command": "marlant_exclude_title_from_validations"
+    },
+    {
         "caption": "MarLant: Join titles",
         "command": "marlant_join_titles"
     },

@@ -28,6 +28,10 @@
                 "command": "marlant_split_title"
             },
             {
+                "caption": "Exclude this title from validation checks",
+                "command": "marlant_exclude_title_from_validations"
+            },
+            {
                 "caption": "-"
             },
             {
