@@ -16,5 +16,6 @@
     ],
     // if set to false, then during generation of a translation file
     // instead of placeholders actual titles will be replaces with empty lines
-    "placeholders_instead_of_empty_lines": true
+    "placeholders_instead_of_empty_lines": true,
+    "title_placeholder": "[ ... ]"
 }

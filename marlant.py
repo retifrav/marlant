@@ -28,7 +28,7 @@ wrongTitleFormatError: typing.Final[str] = " ".join((
     "Current title seems to have",
     "incorrect format, because"
 ))
-titlePlaceholder: typing.Final[str] = "[ ... ]"
+titlePlaceholderFallback: typing.Final[str] = "[ ... ]"
 
 regexLanguageCode: typing.Final[typing.Pattern] = re.compile(r"^[A-Za-z]+$")
 regexSrtNumber: typing.Final[typing.Pattern] = re.compile(r"^[1-9]{1}\d*$")
@@ -178,6 +178,10 @@ def millisecondsToTimeCode(milliseconds: int) -> str:
 
 
 def splitStringInTwo(stringToSplit: str) -> typing.Tuple[str, str]:
+    titlePlaceholder = marlantSettings.get(
+        "title_placeholder",
+        titlePlaceholderFallback
+    )
     middlePoint: int = len(stringToSplit) // 2
     while (
         stringToSplit[middlePoint] != " "
@@ -375,6 +379,11 @@ class MarlantCreateTranslationFileCommand(sublime_plugin.WindowCommand):
         if originalFile.suffix != ".srt":
             sublime.error_message("This is not an .srt file.")
             return
+
+        titlePlaceholder = marlantSettings.get(
+            "title_placeholder",
+            titlePlaceholderFallback
+        )
 
         placeholdersInsteadOfEmptyLines: bool = marlantSettings.get(
             "placeholders_instead_of_empty_lines",
@@ -646,6 +655,11 @@ class AfterCurrentTitleInputHandler(sublime_plugin.ListInputHandler):
 
 class MarlantInsertNewTitleCommand(sublime_plugin.TextCommand):
     def run(self, edit: sublime.Edit, after_current_title: bool) -> None:
+        titlePlaceholder = marlantSettings.get(
+            "title_placeholder",
+            titlePlaceholderFallback
+        )
+
         currentSelection = self.view.sel()
         currentTitlePoint: sublime.Selection = currentSelection[0].b
 
