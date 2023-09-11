@@ -7,6 +7,7 @@
     - [Demonstration](#demonstration)
 - [Installing](#installing)
     - [Requirements](#requirements)
+    - [Syntax highlighting in color schemes](#syntax-highlighting-in-color-schemes)
 - [Using projects](#using-projects)
 - [FAQ](#faq)
     - [No plugin commands available anywhere](#no-plugin-commands-available-anywhere)
@@ -75,6 +76,54 @@ https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-8
 
 - Sublime Text v4099 or newer
     + Python plugin host v3.8 or newer
+
+### Syntax highlighting in color schemes
+
+If your color scheme lacks syntax highlighting rules for `text.srt` scope, you can add those based on the following rules (*these are meant for a dark color scheme*) via `Settings` → `Customize Color Scheme`:
+
+``` json
+{
+    "variables":
+    {
+    },
+    "globals":
+    {
+    },
+    "rules":
+    [
+        {
+            "name": "SRT title ordinal",
+            "scope": "text.srt variable.function markup.bold",
+            "font_style": "bold",
+            "foreground": "#efc778"
+        },
+        {
+            "name": "SRT title timecode",
+            "scope": "text.srt variable.function markup.italic",
+            "font_style": "italic",
+            "foreground": "#c56ddf"
+        },
+        {
+            "name": "SRT title timecode divider",
+            "scope": "text.srt variable.function",
+            "foreground": "#c56ddf"
+        },
+        {
+            "name": "SRT title HTML tags",
+            "scope": "text.srt comment.srt markup.bold.srt",
+            "foreground": "#5f697a"
+        },
+        {
+            "name": "SRT title text in HTML tags",
+            "scope": "text.srt markup.italic.srt",
+            "font_style": "italic",
+            "foreground": "#abb2bf"
+        }
+    ]
+}
+```
+
+To get the scope value of a particular element, place a cursor on it and open `Tools` → `Developer` → `Show Scope Name`.
 
 ## Using projects
 

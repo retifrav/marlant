@@ -1797,7 +1797,7 @@ class MarlantExcludeTitleFromValidationsCommand(sublime_plugin.WindowCommand):
         else:
             print(
                 " ".join((
-                    f"The title {titleOrdinal} has been",
+                    f"The title #{titleOrdinal} has been",
                     "already excluded earlier"
                 ))
             )
