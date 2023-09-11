@@ -580,6 +580,41 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
 
 class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
     def run(self, edit: sublime.Edit) -> None:
+        # if there is a list of ignored titles, clear it,
+        # as it will likely get incorrect/obsolete after renumbering
+        clearedIgnoredTitles: bool = False
+        currentFileName: str = pathlib.Path(
+            self.view.window().active_view().file_name()
+        ).name
+        if self.view.window().project_file_name():
+            projectData = self.view.window().project_data()
+            if projectData:
+                ignoredTitles: typing.List[int] = projectData.get(
+                    "settings", {}
+                ).get(
+                    "marlant", {}
+                ).get(
+                    "validation", {}
+                ).get(
+                    "ignored-titles", {}
+                ).get(
+                    currentFileName, []
+                )
+                if any(ignoredTitles):
+                    print(
+                        " ".join((
+                            "The list of ignored titles before clearing:",
+                            f"{ignoredTitles}"
+                        ))
+                    )
+                    projectData["settings"][
+                        "marlant"
+                    ][
+                        "validation"
+                    ]["ignored-titles"][currentFileName] = []
+                    self.view.window().set_project_data(projectData)
+                    clearedIgnoredTitles = True
+
         bufferLinesRegions: typing.List[sublime.Region] = (
             self.view.split_by_newlines(
                 sublime.Region(0, self.view.size())
@@ -631,6 +666,15 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                     )
                     scrollToProblematicLine(self.view, region)
                     return
+        if clearedIgnoredTitles:
+            sublime.message_dialog(
+                " ".join((
+                    "Note that renumbering the titles caused clearing",
+                    "the list of ignored titles.\n\nThis is not an error,",
+                    "just letting you know, so you don't forget about it.",
+                    "You can find the cleared values in the console."
+                ))
+            )
 
     def is_enabled(self) -> bool:
         return self.view.window().active_view().match_selector(0, "text.srt")
@@ -1210,15 +1254,20 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
         activeView.erase_status(validationStatusKey)
 
         # try to get project settings
-        projectPreferences: sublime.Value = None
+        projectSettings: sublime.Value = None
+        currentFileName: str = pathlib.Path(activeView.file_name()).name
         ignoredTitles: typing.List[int] = []
         if self.window.project_file_name():
-            projectPreferences = self.window.project_data().get("preferences")
-        if projectPreferences:
-            ignoredTitles = projectPreferences.get(
+            projectSettings = self.window.project_data().get("settings")
+        if projectSettings:
+            ignoredTitles = projectSettings.get(
+                "marlant", {}
+            ).get(
                 "validation", {}
             ).get(
-                "ignored-titles", []
+                "ignored-titles", {}
+            ).get(
+                currentFileName, []
             )
 
         maxTitleLineLength: int = marlantSettings.get(

@@ -94,21 +94,28 @@ Here's an example of a project:
             ]
         }
     ],
-    "preferences":
+    "settings":
     {
-        "validation":
+        "marlant":
         {
-            "ignored-titles":
-            [
-                1,
-                3
-            ]
+            "validation":
+            {
+                "ignored-titles":
+                {
+                    "gutta-paa-skauen-s01e01-den-femte-mann-ru.srt":
+                    [
+                        1,
+                        3
+                    ]
+                }
+            }
         }
     }
 }
+
 ```
 
-As you can see, translator/editor added titles `1` and `3` to the list of the ignored titles, and so those will be now excluded from the most validation checks.
+As you can see, translator/editor added titles `1` and `3` to the list of the ignored titles, and so those will be now excluded from most of the validation checks in this particular file.
 
 There will be more preferences values added later.
 
