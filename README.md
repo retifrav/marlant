@@ -168,7 +168,7 @@ Here's an example of a project:
 }
 ```
 
-As you can see, translator/editor added titles `1` and `3` to the list of the ignored titles, and so those will be now excluded from most of the validation checks in this particular file.
+As you can see, translator/editor added some titles numbers to the list of excluded titles (*per file he's working on*), and so now those will be excluded from most of the validation checks (*in those particular files*).
 
 There will be more preferences values added later.
 
