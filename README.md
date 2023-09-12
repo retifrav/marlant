@@ -64,7 +64,7 @@ https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-8
 
 ## Installing
 
-- via [Package Control](https://packagecontrol.io/):
+- via [Package Control](https://packagecontrol.io/packages/MarLant):
     + `CTRL/COMMAND + SHIFT + P` → `Package Control: Install Package` → `MarLant`
 - manually:
     + clone the repository and copy its folder (`marlant`) to `/path/to/Sublime Text/Packages/`
