@@ -7,7 +7,7 @@
     "minimum_title_duration": 500,
     // milliseconds | titles should not stay on screen for too long
     "maximum_title_duration": 6000,
-    // HTML tags to watch for in checks, part of (very naive) regular expression
+    // HTML tags to watch for in checks, part of a (very naive) regular expression
     "html_tags_to_watch_for": [
         "b",
         "i",

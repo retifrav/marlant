@@ -1298,8 +1298,9 @@ class MarlantValidateAllTitlesCommand(sublime_plugin.WindowCommand):
             print(f"MarLant | ERROR | Wrong tags format: {ex}")
             sublime.error_message(
                 " ".join((
-                    "Looks like you've set the tags list incorrectly,",
-                    "check your plugin settings."
+                    "Looks like you've set the list of tags incorrectly,",
+                    "check your plugin settings. If you have just installed",
+                    "the plugin, then restarting Sublime Text might help."
                 ))
             )
             return
