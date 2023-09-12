@@ -580,7 +580,7 @@ class MarlantOpenTranslationFileCommand(sublime_plugin.WindowCommand):
 
 class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
     def run(self, edit: sublime.Edit) -> None:
-        # if there is a list of ignored titles, clear it,
+        # if there is a list of excluded titles, clear it,
         # as it will likely get incorrect/obsolete after renumbering
         clearedExcludedTitles: bool = False
         currentFileName: str = pathlib.Path(
@@ -603,7 +603,7 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
                 if any(excludedTitles):
                     print(
                         " ".join((
-                            "The list of ignored titles before clearing:",
+                            "The list of excluded titles before clearing:",
                             f"{excludedTitles}"
                         ))
                     )
@@ -670,7 +670,7 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
             sublime.message_dialog(
                 " ".join((
                     "Note that renumbering the titles caused clearing",
-                    "the list of ignored titles.\n\nThis is not an error,",
+                    "the list of excluded titles.\n\nThis is not an error,",
                     "just letting you know, so you don't forget about it.",
                     "You can find the cleared values in the console."
                 ))
@@ -1248,7 +1248,7 @@ class MarlantShiftTimingsCommand(sublime_plugin.TextCommand):
 
 
 # some more about SubRip validation: https://ale5000.altervista.org/subtitles.htm
-class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
+class MarlantValidateAllTitlesCommand(sublime_plugin.WindowCommand):
     def run(self) -> None:
         activeView = self.window.active_view()
         activeView.erase_status(validationStatusKey)
@@ -1472,7 +1472,7 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
                     )
                     return
 
-            # --- checking for ignored titles
+            # --- checking for excluded titles
 
             # validation checks after this point are ignorable (more or less),
             # so they can be skipped, if translator/editor wants to exclude them
@@ -1673,7 +1673,7 @@ class MarlantValidateSubtitlesCommand(sublime_plugin.WindowCommand):
         if any(excludedTitles):
             validationSuccess += " ".join((
                 f"\n\nBut do remember that you have {len(excludedTitles)}",
-                "ignored titles in project preferences."
+                "excluded titles in project preferences."
             ))
         sublime.message_dialog(validationSuccess)
 
@@ -1807,6 +1807,73 @@ class MarlantExcludeTitleFromValidationsCommand(sublime_plugin.WindowCommand):
 
     def is_visible(self) -> bool:
         return self.window.active_view().match_selector(0, "text.srt")
+
+
+class MarlantClearExcludedTitlesList(sublime_plugin.WindowCommand):
+    def run(self) -> None:
+        if not self.window.project_file_name():
+            sublime.error_message(
+                " ".join((
+                    "You need to have a Sublime Text project file",
+                    "for this functionality to work."
+                ))
+            )
+            return
+
+        activeView = self.window.active_view()
+        currentFileName: str = pathlib.Path(activeView.file_name()).name
+
+        projectData = self.window.project_data()
+        if not projectData:
+            sublime.error_message(
+                " ".join((
+                    "Couldn't get project data, check if you have",
+                    "any content in your current Sublime Text project file."
+                ))
+            )
+            return
+
+        msg: str = ""
+
+        excludedTitles: typing.List[int] = projectData.get(
+            "settings", {}
+        ).get(
+            "marlant", {}
+        ).get(
+            "validation", {}
+        ).get(
+            "excluded-titles", {}
+        ).get(
+            currentFileName, []
+        )
+        if any(excludedTitles):
+            print(
+                " ".join((
+                    "The list of excluded titles before clearing:",
+                    f"{excludedTitles}"
+                ))
+            )
+            projectData["settings"][
+                "marlant"
+            ][
+                "validation"
+            ]["excluded-titles"][currentFileName] = []
+            self.window.set_project_data(projectData)
+            msg = "The list of excluded tiles has been cleared."
+        else:
+            msg = " ".join((
+                "The list of excluded tiles is already empty,",
+                "nothing to clear."
+            ))
+
+        sublime.message_dialog(msg)
+
+    def is_enabled(self) -> bool:
+        return self.window.active_view().match_selector(0, "text.srt")
+
+    def is_visible(self) -> bool:
+        return self.window.active_view().match_selector(0, "text.srt")
+
 
 # class FileEventListener(sublime_plugin.ViewEventListener):
 #     def on_post_save_async(self):

@@ -41,7 +41,11 @@
         "command": "marlant_shift_timings"
     },
     {
-        "caption": "MarLant: Validate subtitles",
-        "command": "marlant_validate_subtitles"
+        "caption": "MarLant: Validate all titles",
+        "command": "marlant_validate_all_titles"
+    },
+    {
+        "caption": "MarLant: Clear the list of excluded titles",
+        "command": "marlant_clear_excluded_titles_list"
     }
 ]
