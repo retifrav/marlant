@@ -47,5 +47,13 @@
     {
         "caption": "MarLant: Clear the list of excluded titles",
         "command": "marlant_clear_excluded_titles_list"
+    },
+    {
+        "caption": "MarLant: Add to dictionary",
+        "command": "marlant_add_to_dictionary"
+    },
+    {
+        "caption": "MarLant: Find in dictionary",
+        "command": "marlant_find_in_dictionary"
     }
 ]

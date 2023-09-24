@@ -27,6 +27,10 @@ from .plugins.validation import (
     MarlantExcludeTitleFromValidationsCommand,
     MarlantClearExcludedTitlesList
 )
+from .plugins.dictionary import (
+    MarlantAddToDictionary,
+    MarlantFindInDictionary
+)
 
 
 def plugin_loaded() -> None:
