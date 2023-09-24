@@ -32,15 +32,21 @@
 
 - SubRip / SRT syntax highlighting
 - various functions for working with subtitles:
-    + SubRip format validation
-        * additional checks (*text lines length, titles duration, etc*)
-    + renumbering titles ordinals
-    + inserting new titles
-    + splitting a title in two
-    + joining two titles into one
-    + shifting all the timings
-    + opening a translation file in a split view
-    + generation of an empty translation file
+    + SubRip format validation and additional checks
+        * text lines length
+        * titles duration
+        * unclosed HTML tags
+        * etc
+    + titles management
+        * renumbering titles ordinals
+        * inserting new titles
+        * splitting a title in two
+        * joining two titles into one
+        * shifting all the timings
+    + translation
+        * opening a translation file in a split view
+        * generation of an empty translation file
+        * project dictionary
 
 Commands can be called from:
 
@@ -147,16 +153,22 @@ Here's an example of a project:
     {
         "marlant":
         {
+            "dictionary":
+            {
+                "Sverre": "Сварре",
+                "Thorvald": "Турвальд"
+            },
             "validation":
             {
                 "excluded-titles":
                 {
-                    "gutta-paa-skauen-s01e01-den-femte-mann-ru.srt":
+                    "gutta-paa-skauen-s01e01-den-femte-mann.srt":
                     [
                         3,
-                        5
+                        5,
+                        38
                     ],
-                    "gutta-paa-skauen-s01e02-koppen-ru.srt":
+                    "gutta-paa-skauen-s01e02-koppen.srt":
                     [
                         12,
                         25
@@ -168,9 +180,9 @@ Here's an example of a project:
 }
 ```
 
-As you can see, translator/editor added some titles numbers to the list of excluded titles (*per file he's working on*), and so now those will be excluded from most of the validation checks (*in those particular files*).
+As you can see, translator/editor added some titles numbers to the list of excluded titles (*per file*), and so now those will be excluded from most of the validation checks.
 
-There will be more preferences values added later.
+Another example is the project dictionary. It can help with maintaining the consistency of translation/spelling of certain things, such as characters names, so translator wouldn't need to go back looking for the way he spelled them before.
 
 ## FAQ
 
