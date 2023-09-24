@@ -96,13 +96,6 @@ class DictionaryEntryTranslationInputHandler(sublime_plugin.TextInputHandler):
                 f"Add <b>{text}</b> translation to the project dictionary"
             )
 
-    def confirm(self, text: str) -> None:
-        self.text = text
-
-    def next_input(self, args: dict) -> sublime_plugin.BackInputHandler:
-        if self.text == "back":
-            return sublime_plugin.BackInputHandler()
-
 
 class MarlantAddToDictionary(sublime_plugin.WindowCommand):
     def run(self, original: str, translation: str) -> None:
