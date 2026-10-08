@@ -1,7 +1,6 @@
 import sublime
 import sublime_plugin
 
-import pathlib
 import re
 import typing
 
@@ -14,10 +13,10 @@ class MarlantRenumberTitlesCommand(sublime_plugin.TextCommand):
         # if there is a list of excluded titles, clear it,
         # as it will likely get incorrect/obsolete after renumbering
         clearedExcludedTitles: bool = False
-        currentFileName: str = pathlib.Path(
-            self.view.window().active_view().file_name()
-        ).name
-        if self.view.window().project_file_name():
+        currentFileName: typing.Optional[str] = common.getCurrentFileName(
+            self.view
+        )
+        if currentFileName and self.view.window().project_file_name():
             projectData = self.view.window().project_data()
             if projectData:
                 excludedTitles: typing.List[int] = projectData.get(

@@ -1,5 +1,6 @@
 import sublime
 
+import pathlib
 import re
 import typing
 
@@ -49,6 +50,13 @@ def scrollToProblematicLineNumber(
     pnt: int = view.text_point(lineNumber, 0)
     lineRegion: sublime.Region = view.line(pnt)
     scrollToProblematicLine(view, lineRegion)
+
+
+# excluded titles are stored in project data per file name,
+# and a file that hasn't been saved yet doesn't have a name
+def getCurrentFileName(view: sublime.View) -> typing.Optional[str]:
+    filePath: typing.Optional[str] = view.file_name()
+    return pathlib.Path(filePath).name if filePath else None
 
 
 def parseTitleString(

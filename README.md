@@ -179,7 +179,7 @@ Here's an example of a project:
 }
 ```
 
-As you can see, translator/editor added some titles numbers to the list of excluded titles (*per file*), and so now those will be excluded from most of the validation checks.
+As you can see, translator/editor added some titles numbers to the list of excluded titles (*per file*, so the file needs to be saved first), and so now those will be excluded from most of the validation checks.
 
 Another example is the project dictionary. It can help with maintaining the consistency of translation/spelling of certain things, such as characters names, so translator wouldn't need to go back looking for the way he spelled them before.
 

@@ -2,7 +2,6 @@ import sublime
 import sublime_plugin
 
 from collections import Counter
-import pathlib
 import re
 import typing
 
@@ -11,6 +10,10 @@ from . import timing
 
 validationStatusKey: str = "marlant_validation_status"
 validationError: typing.Final[str] = "Validation error:"
+unsavedFileError: typing.Final[str] = " ".join((
+    "The file needs to be saved first, as excluded titles",
+    "are stored in the project per file name."
+))
 
 
 def failedValidation(
@@ -55,9 +58,11 @@ class MarlantValidateAllTitlesCommand(sublime_plugin.WindowCommand):
 
         # try to get project settings
         projectSettings: sublime.Value = None
-        currentFileName: str = pathlib.Path(activeView.file_name()).name
+        currentFileName: typing.Optional[str] = common.getCurrentFileName(
+            activeView
+        )
         excludedTitles: typing.List[int] = []
-        if self.window.project_file_name():
+        if currentFileName and self.window.project_file_name():
             projectSettings = self.window.project_data().get("settings")
         if projectSettings:
             excludedTitles = projectSettings.get(
@@ -497,7 +502,12 @@ class MarlantExcludeTitleFromValidationsCommand(sublime_plugin.WindowCommand):
             return
 
         activeView = self.window.active_view()
-        currentFileName: str = pathlib.Path(activeView.file_name()).name
+        currentFileName: typing.Optional[str] = common.getCurrentFileName(
+            activeView
+        )
+        if not currentFileName:
+            sublime.error_message(unsavedFileError)
+            return
 
         # TODO: move this to a generalized common functions
         # ensure that settings tree structure is in place
@@ -624,7 +634,12 @@ class MarlantClearExcludedTitlesList(sublime_plugin.WindowCommand):
             return
 
         activeView = self.window.active_view()
-        currentFileName: str = pathlib.Path(activeView.file_name()).name
+        currentFileName: typing.Optional[str] = common.getCurrentFileName(
+            activeView
+        )
+        if not currentFileName:
+            sublime.error_message(unsavedFileError)
+            return
 
         projectData = self.window.project_data()
         if not projectData:
