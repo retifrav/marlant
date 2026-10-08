@@ -12,8 +12,7 @@
 - [FAQ](#faq)
     - [No plugin commands available anywhere](#no-plugin-commands-available-anywhere)
     - [Are there keybindings](#are-there-keybindings)
-    - [Why the Sublime Text 4 requirement and v4099 as the lowest](#why-the-sublime-text-4-requirement-and-v4099-as-the-lowest)
-    - [Why the Python 3.8 plugin host requirement](#why-the-python-38-plugin-host-requirement)
+    - [Why 4205 is the minimum required Sublime Text version](#why-4205-is-the-minimum-required-sublime-text-version)
     - [The plugin is licensed under GPLv3, will it infect everything else with GPLv3](#the-plugin-is-licensed-under-gplv3-will-it-infect-everything-else-with-gplv3)
     - [Who killed Laura Palmer](#who-killed-laura-palmer)
 - [Credits](#credits)
@@ -73,15 +72,15 @@ https://user-images.githubusercontent.com/6904927/168663924-b1236762-3207-480e-8
 - via [Package Control](https://packagecontrol.io/packages/MarLant):
     + `CTRL/COMMAND + SHIFT + P` → `Package Control: Install Package` → `MarLant`
 - manually:
-    + clone the repository and copy its folder (`marlant`) to `/path/to/Sublime Text/Packages/`
+    + clone the repository and copy its folder `marlant` to `/path/to/Sublime Text/Packages/` but rename it to case-sensitive `MarLant`
         * the exact path to packages can be opened with `CTRL/COMMAND + SHIFT + P` → `Preferences: Browse Packages`
         * you might want to skip copying resources listed in `.gitattributes` file
             - or just download an archive attached to the latest [tag](https://github.com/retifrav/marlant/tags)
 
 ### Requirements
 
-- Sublime Text v4099 or newer
-    + Python plugin host v3.8 or newer
+- Sublime Text v4205 or newer
+    + Python plugin host v3.14
 
 ### Syntax highlighting in color schemes
 
@@ -209,13 +208,9 @@ For example, the following adds two keybindings: for inserting a new title befor
 }
 ```
 
-### Why the Sublime Text 4 requirement and v4099 as the lowest
+### Why 4205 is the minimum required Sublime Text version
 
-The version 4 in general is because that's where Python plugin host v3.8 was added. And the v4099 specifically as the minimal one is because it's the one with the latest plugin host v3.8.8. But of course most likely the plugin will also work fine with the very first v4050.
-
-### Why the Python 3.8 plugin host requirement
-
-Mostly because of [f-strings](https://peps.python.org/pep-0498/) that were added only in Python 3.6 and thus are not available with plugin host v3.3.
+Because that's where Python plugin host v3.8 was replaced with v3.14, which is the one this plugin is tested with. Older Sublime Text versions don't know about v3.14 and would try to run the plugin with v3.3, which would fail. Note that Sublime Text 4205 is a dev build, and the first stable build with plugin host v3.14 was Sublime Text 4213.
 
 ### The plugin is licensed under GPLv3, will it infect everything else with GPLv3
 
